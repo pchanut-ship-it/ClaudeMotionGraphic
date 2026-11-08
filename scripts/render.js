@@ -8,7 +8,10 @@ const { chromium } = require('playwright'); const { spawn } = require('child_pro
   await pg.goto('file://' + path.resolve(__dirname, '../index.html') + '?render=1' + (clean ? '&captions=0' : ''));
   await pg.waitForFunction(() => window.__ready);
   const DUR = await pg.evaluate(() => window.__DUR);
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
+  // sound effects (generate with: python3 scripts/sfx.py /tmp/raw.wav, then loudnorm → output/sfx.wav — see README)
+  const sfx = path.resolve(__dirname, '../output/sfx.wav');
+  const audio = require('fs').existsSync(sfx) ? ['-i', sfx, '-map', '0:v:0', '-map', '1:a:0', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : [];
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...audio,
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let f = 0; f < FPS * DUR; f++) {
     await pg.evaluate(t => window.__setTime(t), f / FPS);

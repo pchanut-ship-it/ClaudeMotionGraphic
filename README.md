@@ -17,8 +17,11 @@
   - `?captions=0` ภาพเปล่าไม่มีข้อความ (สำหรับใส่ข้อความเองตอนตัดต่อ) · `?render=1` โหมดเรนเดอร์ 1920×1080
 - `output/watermark-explainer.mp4` — ฉบับมีชื่อคลิป คำบรรยาย และข้อความประกอบ
 - `output/watermark-explainer-clean.mp4` — ฉบับไม่มีข้อความ (clean plate) เว้นพื้นที่ด้านล่างสำหรับคำบรรยาย
+- `output/sfx.wav` — แทร็กเสียงเอฟเฟกต์แยก (stem) 52 วินาที, −19 LUFS ใส่ไว้ในทั้งสองวิดีโอแล้ว ใช้แยกตอนตัดต่อหรือมิกซ์กับเสียงบรรยายได้
+- `scripts/sfx.py` — สังเคราะห์เสียงเอฟเฟกต์ทั้งหมดจากคลื่นไซน์และ noise (ไม่ใช้ไฟล์เสียงภายนอก ไม่มีปัญหาลิขสิทธิ์) ตาม cue list ที่ตรงกับไทม์ไลน์ภาพ
+  สร้างใหม่: `python3 scripts/sfx.py /tmp/raw.wav && ffmpeg -i /tmp/raw.wav -af loudnorm=I=-19:TP=-2:LRA=11 -ar 48000 output/sfx.wav`
 - `scripts/render.js` — เรนเดอร์ MP4 ใหม่: `node scripts/render.js output/x.mp4 [--clean]` (ต้องมี Playwright + ffmpeg)
 - `scripts/snap.js` — ถ่ายภาพนิ่ง ณ เวลาที่กำหนด: `node scripts/snap.js <dir> 2.0 12.8 27`
 
-ยังไม่มีเสียงบรรยาย — ช่วงเวลาคำบรรยายอยู่ในตัวแปร `CAPS` ใน `index.html` ใช้เป็นจังหวะอัดเสียงได้
+มีเสียงเอฟเฟกต์แล้ว แต่ยังไม่มีเสียงบรรยาย — ช่วงเวลาคำบรรยายอยู่ในตัวแปร `CAPS` ใน `index.html` และตารางท้าย `STORYBOARD.md` ใช้เป็นจังหวะอัดเสียงได้
 ฟอนต์: Prompt (SIL Open Font License) ใน `assets/fonts/`
