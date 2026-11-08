@@ -3,10 +3,11 @@
 const { chromium } = require('playwright'); const { spawn } = require('child_process'); const path = require('path');
 (async () => {
   const out = process.argv[2] || 'output/watermark-explainer.mp4', clean = process.argv.includes('--clean');
-  const FPS = 30, DUR = 30;
+  const FPS = 30;
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1920, height: 1080 } });
   await pg.goto('file://' + path.resolve(__dirname, '../index.html') + '?render=1' + (clean ? '&captions=0' : ''));
   await pg.waitForFunction(() => window.__ready);
+  const DUR = await pg.evaluate(() => window.__DUR);
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let f = 0; f < FPS * DUR; f++) {

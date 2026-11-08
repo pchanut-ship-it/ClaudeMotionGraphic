@@ -42,24 +42,24 @@
   </div>
   <div class="controls">
     <button id="play">⏸ หยุด</button>
-    <input id="scrub" type="range" min="0" max="30" step="0.01" value="0">
-    <span class="time" id="time">0.00 / 30.00</span>
+    <input id="scrub" type="range" min="0" max="52" step="0.01" value="0">
+    <span class="time" id="time">0.00 / 52.00</span>
     <label><input id="caps" type="checkbox" checked> คำบรรยาย/ข้อความ</label>
   </div>
 </div>
 
 <script>
 /* =========================================================================
-   "ร่องรอยลับในข้อความ AI" — 30 s explainer, 6 scenes.
+   "ร่องรอยลับในข้อความ AI" — 52 s explainer, 7 scenes (see STORYBOARD.md).
    Everything is a pure function of time t (seconds) → render(t), so the
    piece can be scrubbed in the browser and captured frame-by-frame.
    URL params:  ?render=1  (1920×1080, no UI, paused)   ?captions=0 (clean plate)
    ========================================================================= */
-const DUR = 30;
+const DUR = 52;
 const C = {
   cream: "#FBF6EC", navy: "#1E3A6E", blue: "#2F6FD6", sky: "#4AA3F0", pale: "#DDEBFA",
-  paleLine: "#C6DAF2", white: "#FFFFFF", edge: "#CFDDEE", gray: "#B9C2CF",
-  purple: "#8B5CF6", yellow: "#F5C242", skin: "#F3C7A1", hair: "#1F1F24", ink: "#2B2F3A",
+  paleLine: "#C6DAF2", white: "#FFFFFF", edge: "#CFDDEE", gray: "#B9C2CF", track: "#EEF0F5",
+  purple: "#8B5CF6", yellow: "#F5C242", key: "#F2B833", skin: "#F3C7A1", hair: "#1F1F24", ink: "#2B2F3A",
 };
 const params = new URLSearchParams(location.search);
 const RENDER = params.get("render") === "1";
@@ -78,9 +78,17 @@ const prog = (t, a, b, e = eio) => e(clamp((t - a) / (b - a)));
 const bump = (t, a, b) => { const p = clamp((t - a) / (b - a)); return Math.sin(p * Math.PI); };
 const mixHex = (h1, h2, p) => {
   const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16);
-  const ch = s => Math.round(lerp((a >> s) & 255, (b >> s) & 255, p));
+  const ch = s => Math.round(lerp((a >> s) & 255, (b >> s) & 255, clamp(p)));
   return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
 };
+function camKF(t, kfs) {   // [[time, cx, cy, scale], ...] — hold, then ease between keyframes
+  if (t <= kfs[0][0]) return kfs[0].slice(1);
+  for (let i = 0; i < kfs.length - 1; i++) {
+    const a = kfs[i], b = kfs[i + 1];
+    if (t <= b[0]) { const p = eio((t - a[0]) / (b[0] - a[0])); return [lerp(a[1], b[1], p), lerp(a[2], b[2], p), lerp(a[3], b[3], p)]; }
+  }
+  return kfs[kfs.length - 1].slice(1);
+}
 
 /* ---------- DOM helpers ---------- */
 const svg = document.getElementById("svg");
@@ -89,6 +97,9 @@ const attr = (id, o) => { const el = typeof id === "string" ? $(id) : id; for (c
 const op = (id, v) => $(id).setAttribute("opacity", clamp(v).toFixed(3));
 const tf = (id, s) => $(id).setAttribute("transform", s);
 const cam = (id, cx, cy, s) => tf(id, `translate(960 540) scale(${s}) translate(${-cx} ${-cy})`);
+const lbl = (id, t, a, b) => op(id, CAPTIONS ? prog(t, a, a + 0.4) * (1 - prog(t, b - 0.3, b)) : 0);  // post-production labels
+const label = (id, x, y, txt, o = {}) =>
+  `<g id="${id}" opacity="0"><text x="${x}" y="${y}" text-anchor="${o.anchor || "middle"}" font-size="${o.size || 28}" font-weight="${o.weight || 500}" fill="${o.fill || C.navy}">${txt}</text></g>`;
 
 /* ---------- reusable drawings ---------- */
 function student(p) {
@@ -139,16 +150,23 @@ function robot(p) {
       <g id="${p}-eyes">
         <circle cx="-30" cy="-226" r="14" fill="#EAF7FF"/><circle cx="30" cy="-226" r="14" fill="#EAF7FF"/>
       </g>
-      <path id="${p}-mouth" d="M-14 -199 Q0 -191 14 -199" fill="none" stroke="#EAF7FF" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-14 -199 Q0 -191 14 -199" fill="none" stroke="#EAF7FF" stroke-width="4" stroke-linecap="round"/>
     </g>
   </g>`;
 }
-function pencil(id) {
-  return `<g id="${id}"><g transform="translate(-8 -70)">
+function pencil(id, s = 1) {   // tip at local (0, 22·s)
+  return `<g id="${id}"><g transform="scale(${s}) translate(-8 -70)">
       <rect x="0" y="0" width="16" height="70" rx="3" fill="${C.blue}"/>
       <rect x="0" y="-12" width="16" height="14" rx="4" fill="#F4A6B4"/>
       <path d="M0 70 L8 92 L16 70 Z" fill="#F3D9B1"/><path d="M5 84 L8 92 L11 84 Z" fill="${C.ink}"/>
     </g></g>`;
+}
+function keyIcon(id) {
+  return `<g id="${id}"><g filter="url(#shadowSm)">
+      <circle cx="-36" cy="0" r="25" fill="none" stroke="${C.key}" stroke-width="14"/>
+      <rect x="-14" y="-7" width="84" height="14" rx="7" fill="${C.key}"/>
+      <rect x="44" y="2" width="12" height="24" rx="4" fill="${C.key}"/><rect x="60" y="2" width="10" height="17" rx="4" fill="${C.key}"/>
+      <circle cx="-36" cy="0" r="7" fill="#FFF3CF"/></g></g>`;
 }
 function textLines(x, y, w, n, gap, h, widths, color = C.gray, idp = "") {
   let s = "";
@@ -173,20 +191,44 @@ function piecePath(w, h, left, right) {
   d += left ? `L0 ${m + n} A${r} ${r} 0 1 ${left > 0 ? 1 : 0} 0 ${m - n} L0 0 Z` : `Z`;
   return d;
 }
+const PANEL_RECT = `<rect x="-210" y="-150" width="420" height="300" rx="28" fill="${C.white}" stroke="${C.purple}" stroke-width="5" filter="url(#shadow)"/>`;
 
 /* ---------- scene data ---------- */
 const DOT_PATTERN = [1, 0, 1, 1, 0, 1];               // which words carry the hidden signal
 const DOT_FRAC = [0.22, 0, 0.66, 0.42, 0, 0.8];        // where along the line the dot sits
 const LINE_W = [0.92, 0.86, 0.94, 0.8, 0.9, 0.56, 0.88, 0.7];
 
-// Scene 2 cards
-const S2 = { gx: [520, 960, 1400], gy: [290, 420, 550], cw: 230, ch: 100,
-  sel: [1, 0, 2], slotX: [700, 960, 1220], slotY: 770, T: [5.0, 6.6, 8.2], dotted: [1, 0, 1] };
+// Scene 2 — the word engine: one detailed cycle, then three fast ones.
+// B = score bars, G = 1 if the word lands in the "special group", P = word that gets picked.
+const ENG = {
+  candX: 900, candY: [400, 480, 560, 640, 720], cw: 170, ch: 62, barX: 1020, boost: 60,
+  mixX: 520, mixY: 560, keyDock: [372, 560], slotX: 1000, rowY: 210, step: 190,
+  cycles: [
+    { s: 4.0,   B: [330, 290, 200, 140, 90],  G: [0, 1, 0, 1, 1], P: 1 },   // boost lifts #2 past #1
+    { s: 21.0,  B: [260, 240, 180, 150, 100], G: [1, 0, 0, 1, 0], P: 0 },
+    { s: 22.55, B: [300, 200, 170, 120, 80],  G: [0, 1, 1, 0, 1], P: 0 },   // a normal word can still win
+    { s: 24.1,  B: [220, 210, 190, 130, 90],  G: [0, 0, 1, 1, 0], P: 2 },
+  ],
+  inner: [[.7, .45], [.55, .62], [.66, .38], [.5, .3], [.72, .5], [.6, .4], [.45, .58]],
+};
+const WRITTEN_DOT = [1, 0, 1, 1, 0, 1];                  // = DOT_PATTERN: result of the cycles above
+const ENG_KF = [[4, 980, 500, 1.2], [9.2, 980, 470, 1.14], [10.3, 790, 500, 1.14], [14.8, 800, 500, 1.14],
+  [15.8, 980, 510, 1.12], [20.3, 980, 510, 1.12], [21.2, 960, 500, 1.08], [25.3, 960, 500, 1.08], [26, 960, 540, 1.0]];
+function phase(ci) {
+  const s = ENG.cycles[ci].s;
+  if (ci === 0) return { bar: [6.0, 7.4], ghost: [10.0, 10.9], spin: [10.8, 12.0], beam: [11.9, 12.7], mark: [12.2, 13.2],
+    boost: [15.4, 16.6], hi: [17.6, 18.4], pick: [18.4, 19.6], dot: [19.6, 20.0], shift: [20.1, 20.8] };
+  return { inA: s, inB: s + 0.25, bar: [s + 0.15, s + 0.45], ghost: [s + 0.12, s + 0.45], spin: [s + 0.3, s + 0.6],
+    beam: [s + 0.42, s + 0.7], mark: [s + 0.5, s + 0.7], boost: [s + 0.68, s + 0.88], hi: [s + 0.82, s + 0.92],
+    pick: [s + 0.9, s + 1.3], dot: [s + 1.3, s + 1.45], shift: ci === 3 ? null : [s + 1.3, s + 1.55] };
+}
 // Scene 3 cards → lines
-const S3 = { n: 6, cw: 170, ch: 80, gap: 195, rowY: 455,
+const S3 = { n: 6, cw: 170, ch: 62, gap: 195, rowY: 455,
   lx: 610, ly: 330, lgap: 64, lh: 16, lw: [700, 650, 690, 610, 680, 430] };
 // Scene 5 copy-on-screen geometry
 const S5 = { sx: 915, sy: 245, sw: 230, sh: 300 };
+// Scene 6 paper
+const S6 = { x: 610, y: 240, w: 380, lx: 660, ly: 300, lgap: 50, lw: 280, newW: [0.7, 0.95, 0.62] };
 
 /* ---------- build the scene graph ---------- */
 function build() {
@@ -195,8 +237,10 @@ function build() {
     <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58B2F5"/><stop offset="1" stop-color="#2F86E0"/></linearGradient>
     <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.sky}" stop-opacity="0"/><stop offset="1" stop-color="${C.sky}" stop-opacity=".45"/></linearGradient>
     <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="glowBig" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="18"/></filter>
     <filter id="glowSoft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.5"/></filter>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1E3A6E" flood-opacity=".14"/></filter>
+    <filter id="shadowSm" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#1E3A6E" flood-opacity=".18"/></filter>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><circle cx="24" cy="24" r="2.4" fill="${C.paleLine}"/></pattern>
     <clipPath id="screenClip"><rect x="724" y="194" width="612" height="392" rx="16"/></clipPath>
   </defs>
@@ -217,31 +261,57 @@ function build() {
     ${pencil("rb1-pencil")}
   </g></g>`;
 
-  /* ===== Scene 2: picking words, leaving a trace ===== */
+  /* ===== Scene 2: inside the AI — how a word gets chosen and nudged ===== */
+  const E = ENG;
   s += `<g id="sc2"><g id="cam2">
     <rect x="-300" y="-300" width="2520" height="1680" fill="${C.pale}"/>
     <rect x="-300" y="-300" width="2520" height="1680" fill="url(#grid)" opacity=".8"/>
-    <circle cx="160" cy="900" r="260" fill="#E8F1FC"/><circle cx="1800" cy="120" r="220" fill="#E8F1FC"/>`;
-  for (let g = 0; g < 3; g++) {
-    s += `<rect x="${S2.gx[g] - 150}" y="${S2.gy[0] - 80}" width="300" height="420" rx="36" fill="#EEF5FD" opacity=".9"/>`;
+    <circle cx="160" cy="900" r="260" fill="#E8F1FC"/><circle cx="1800" cy="120" r="220" fill="#E8F1FC"/>
+    <rect id="e-slot" x="${E.slotX - E.cw / 2}" y="${E.rowY - E.ch / 2}" width="${E.cw}" height="${E.ch}" rx="18" fill="none" stroke="${C.blue}" stroke-width="4" stroke-dasharray="14 10"/>`;
+  for (let i = 0; i < 5; i++) {
+    const y = E.candY[i];
+    s += `<line id="bm${i}" x1="${E.mixX + 82}" y1="${E.mixY}" x2="${E.candX - 150}" y2="${y}" stroke="${C.purple}" stroke-width="5" stroke-linecap="round" opacity="0"/>`;
   }
-  for (let g = 0; g < 3; g++) if (S2.dotted[g]) s += dot(`s2-dot${g}`, S2.slotX[g], S2.slotY + 80);
-  for (let g = 0; g < 3; g++) for (let k = 0; k < 3; k++) {
-    const w = S2.cw, h = S2.ch, wv = [[.7, .45], [.55, .62], [.66, .38]][(g + k) % 3];
-    s += `<g id="c${g}${k}" filter="url(#shadow)"><g id="c${g}${k}-in">
-      <rect id="c${g}${k}-r" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="20" fill="${C.white}" stroke="${C.edge}" stroke-width="4"/>
-      <rect x="${-w / 2 + 26}" y="-20" width="${(w - 52) * wv[0]}" height="14" rx="7" fill="#9DB9DD"/>
-      <rect x="${-w / 2 + 26}" y="8" width="${(w - 52) * wv[1]}" height="14" rx="7" fill="#C7D7EC"/>
-    </g></g>`;
+  for (let i = 0; i < 5; i++) {
+    const y = E.candY[i];
+    s += `<rect id="ct${i}" x="${E.barX}" y="${y - 14}" width="420" height="28" rx="14" fill="#E6EFFA"/>
+      <rect id="cb${i}" x="${E.barX}" y="${y - 14}" width="1" height="28" rx="14" fill="${C.sky}"/>
+      <rect id="cbb${i}" x="${E.barX}" y="${y - 14}" width="1" height="28" rx="14" fill="${C.purple}"/>
+      <g id="cd${i}" filter="url(#shadow)">
+        <rect id="cd${i}-r" x="${-E.cw / 2}" y="${-E.ch / 2}" width="${E.cw}" height="${E.ch}" rx="18" fill="${C.white}" stroke="${C.edge}" stroke-width="4"/>
+        <rect id="cd${i}-a" x="${-E.cw / 2 + 22}" y="-13" height="12" rx="6" fill="#9DB9DD"/>
+        <rect id="cd${i}-b" x="${-E.cw / 2 + 22}" y="5" height="12" rx="6" fill="#C7D7EC"/>
+      </g>
+      ${dot(`cdm${i}`, E.candX - 120, y)}`;
   }
-  s += `<g id="s2-hand">
-      <line id="s2-arm-o" stroke="${C.edge}" stroke-width="58" stroke-linecap="round"/>
-      <line id="s2-arm" stroke="${C.white}" stroke-width="46" stroke-linecap="round"/>
-      <g id="s2-mitt"><rect x="-44" y="-40" width="88" height="62" rx="28" fill="${C.white}" stroke="${C.edge}" stroke-width="5"/>
-        <rect x="-36" y="10" width="20" height="34" rx="10" fill="${C.white}" stroke="${C.edge}" stroke-width="5"/>
-        <rect x="16" y="10" width="20" height="34" rx="10" fill="${C.white}" stroke="${C.edge}" stroke-width="5"/>
-        <circle cx="0" cy="-10" r="9" fill="${C.sky}" opacity=".7"/></g>
+  // written words (top row): fixed inner geometry so they match scene 3 exactly
+  for (let k = 0; k < 6; k++) {
+    s += dot(`wd${k}`);
+    s += `<g id="w${k}" filter="url(#shadow)">
+      <rect x="${-E.cw / 2}" y="${-E.ch / 2}" width="${E.cw}" height="${E.ch}" rx="18" fill="${C.white}" stroke="${C.edge}" stroke-width="4"/>
+      <rect x="${-E.cw / 2 + 22}" y="${-E.ch / 2 + E.ch * 0.3}" width="${E.cw * 0.55}" height="12" rx="6" fill="#9DB9DD"/>
+      <rect x="${-E.cw / 2 + 22}" y="${-E.ch / 2 + E.ch * 0.58}" width="${E.cw * 0.38}" height="12" rx="6" fill="#C7D7EC"/></g>`;
+  }
+  s += `<g id="ghost"><rect x="${-E.cw / 2}" y="${-E.ch / 2}" width="${E.cw}" height="${E.ch}" rx="18" fill="${C.white}" stroke="${C.blue}" stroke-width="4" stroke-dasharray="10 8"/>
+      <rect x="${-E.cw / 2 + 22}" y="${-E.ch / 2 + E.ch * 0.3}" width="${E.cw * 0.55}" height="12" rx="6" fill="#9DB9DD"/></g>
+    <g id="mixer" transform="translate(${E.mixX} ${E.mixY})">
+      <circle id="mx-glow" r="110" fill="${C.purple}" opacity="0" filter="url(#glowBig)"/>
+      <rect x="-80" y="-80" width="160" height="160" rx="42" fill="${C.white}" stroke="${C.edge}" stroke-width="5" filter="url(#shadow)"/>
+      <g id="mx-arrows">
+        <g><path d="M-35.7 -13 A38 38 0 0 1 29.1 -24.4" fill="none" stroke="${C.blue}" stroke-width="10" stroke-linecap="round"/>
+           <path d="M38.6 -33.3 L22.2 -18.6 L40.4 -12.4 Z" fill="${C.blue}" stroke="${C.blue}" stroke-width="4" stroke-linejoin="round"/></g>
+        <g transform="rotate(180)"><path d="M-35.7 -13 A38 38 0 0 1 29.1 -24.4" fill="none" stroke="${C.purple}" stroke-width="10" stroke-linecap="round"/>
+           <path d="M38.6 -33.3 L22.2 -18.6 L40.4 -12.4 Z" fill="${C.purple}" stroke="${C.purple}" stroke-width="4" stroke-linejoin="round"/></g>
+      </g>
     </g>
+    ${keyIcon("e-key")}
+    ${label("l-written", 530, 150, "ข้อความที่เขียนแล้ว", { anchor: "start" })}
+    ${label("l-next", 900, 352, "คำถัดไปที่เป็นไปได้")}
+    ${label("l-score", 1050, 352, "คะแนนความน่าจะเป็น", { anchor: "start" })}
+    ${label("l-key", 372, 660, "กุญแจลับ")}
+    ${label("l-prev", 810, 292, "คำก่อนหน้า", { size: 26 })}
+    <g id="l-group" opacity="0">${dot("l-group-dot", 1092, 330)}<text x="1118" y="340" font-size="28" font-weight="600" fill="${C.purple}">กลุ่มพิเศษ</text></g>
+    ${label("l-boost", 1432, 492, "+ เพิ่มคะแนนเล็กน้อย", { anchor: "start", fill: C.purple, weight: 600 })}
   </g></g>`;
 
   /* ===== Scene 3: the pattern hides in the text ===== */
@@ -271,7 +341,7 @@ function build() {
     <circle id="st4-armL-h" r="21" fill="${C.skin}"/><circle id="st4-armR-h" r="21" fill="${C.skin}"/>
   </g></g>`;
 
-  /* ===== Scene 5: a detector looks for the pattern ===== */
+  /* ===== Scene 5: a detector with the same key counts the pattern ===== */
   const paperLines = (x, y, w, h, idp) => textLines(x + w * 0.14, y + h * 0.13, w * 0.72, 8, h * 0.094, h * 0.034, LINE_W, C.gray, idp);
   s += `<g id="sc5"><g id="cam5">
     <circle cx="1650" cy="160" r="200" fill="#EAF2FC"/>
@@ -283,6 +353,7 @@ function build() {
     </g>
     <rect x="1000" y="606" width="60" height="76" fill="#2B4B83"/>
     <rect x="910" y="674" width="240" height="26" rx="13" fill="${C.navy}"/>
+    <circle id="s5-keyglow" cx="700" cy="230" r="70" fill="${C.purple}" opacity="0" filter="url(#glowBig)"/>
     <rect x="700" y="170" width="660" height="440" rx="30" fill="${C.navy}" filter="url(#shadow)"/>
     <rect x="724" y="194" width="612" height="392" rx="16" fill="#EAF3FF"/>
     <g clip-path="url(#screenClip)">
@@ -292,13 +363,46 @@ function build() {
       <g id="s5-scan"><rect x="724" y="-60" width="612" height="60" fill="url(#scanGrad)"/><rect x="724" y="-4" width="612" height="7" rx="3" fill="${C.sky}"/></g>
     </g>
     <circle cx="1030" cy="597" r="4" fill="#4E6FA6"/>
-    <g id="s5-result" transform="translate(1620 390)">
-      <rect x="-200" y="-90" width="400" height="180" rx="26" fill="${C.white}" stroke="${C.purple}" stroke-width="5" filter="url(#shadow)"/>
-      <g id="s5-resultText"><text x="0" y="12" text-anchor="middle" font-size="36" font-weight="600" fill="${C.purple}">พบสัญญาณลายน้ำ</text></g>
+    ${keyIcon("s5-key")}
+    <g id="s5-result" transform="translate(1640 400)">
+      ${PANEL_RECT}
+      <line x1="10" y1="-46" x2="10" y2="6" stroke="#8A96AA" stroke-width="3" stroke-dasharray="8 7"/><line x1="10" y1="44" x2="10" y2="96" stroke="#8A96AA" stroke-width="3" stroke-dasharray="8 7"/>
+      <circle cx="-172" cy="-20" r="11" fill="${C.gray}"/>
+      <rect x="-145" y="-34" width="320" height="28" rx="14" fill="${C.track}"/>
+      <rect id="s5-b1" x="-145" y="-34" width="1" height="28" rx="14" fill="${C.gray}"/>
+      <g transform="translate(-172 70) scale(.75)">${dot("s5-rowdot")}</g>
+      <rect x="-145" y="56" width="320" height="28" rx="14" fill="${C.track}"/>
+      <rect id="s5-b2" x="-145" y="56" width="1" height="28" rx="14" fill="${C.purple}"/>
+      <g id="s5-title" opacity="0"><text x="0" y="-92" text-anchor="middle" font-size="34" font-weight="600" fill="${C.purple}">พบสัญญาณลายน้ำ</text></g>
+      <g id="s5-lbls" opacity="0">
+        <text x="-145" y="24" font-size="26" font-weight="500" fill="#6B778C">ถ้าเป็นความบังเอิญ</text>
+        <text x="-145" y="118" font-size="26" font-weight="500" fill="${C.purple}">ข้อความนี้</text></g>
     </g>
   </g></g>`;
 
-  /* ===== Scene 6: only one piece of the evidence ===== */
+  /* ===== Scene 6: short or edited text → weaker signal ===== */
+  let l6 = "";
+  for (let i = 0; i < 8; i++) l6 += `<rect id="s6l${i}" x="${S6.lx}" y="${S6.ly + i * S6.lgap}" width="${S6.lw * LINE_W[i]}" height="14" rx="7" fill="${C.gray}"/>`;
+  let d6 = "";
+  for (let i = 0; i < 6; i++) if (DOT_PATTERN[i]) d6 += dot(`s6d${i}`, S6.lx + S6.lw * LINE_W[i] * DOT_FRAC[i], S6.ly + i * S6.lgap + 7);
+  s += `<g id="sc6"><g id="cam6">
+    <circle cx="300" cy="200" r="200" fill="#EAF2FC"/><circle cx="1700" cy="880" r="240" fill="#EAF2FC"/>
+    <g filter="url(#shadow)"><rect id="s6p" x="${S6.x}" y="${S6.y}" width="${S6.w}" height="480" rx="18" fill="${C.white}" stroke="${C.edge}" stroke-width="3"/></g>
+    ${l6}${d6}
+    ${pencil("s6-pencil", 1.5)}
+    <g id="s6-panel" transform="translate(1420 480)">
+      ${PANEL_RECT}
+      <rect x="-170" y="-14" width="340" height="40" rx="20" fill="${C.track}"/>
+      <rect id="s6-fill" x="-170" y="-14" width="300" height="40" rx="20" fill="${C.purple}"/>
+      <line x1="-10" y1="-40" x2="-10" y2="52" stroke="#8A96AA" stroke-width="3" stroke-dasharray="8 7"/>
+      <g id="s6-title" opacity="0"><text x="0" y="-80" text-anchor="middle" font-size="32" font-weight="600" fill="${C.navy}">ความชัดของสัญญาณ</text></g>
+      <g id="s6-lbls" opacity="0"><text x="-10" y="86" text-anchor="middle" font-size="26" font-weight="500" fill="#6B778C">เกณฑ์ตัดสินว่าพบ</text></g>
+    </g>
+    ${label("s6-lab1", 800, 205, "ข้อความสั้น", { size: 34, weight: 600 })}
+    ${label("s6-lab2", 800, 520, "ถูกแก้ไข / เรียบเรียงใหม่", { size: 34, weight: 600 })}
+  </g></g>`;
+
+  /* ===== Scene 7: only one piece of the evidence ===== */
   const P = 240;
   const icon = {
     mag: `<circle cx="-10" cy="-10" r="38" fill="none" stroke="#fff" stroke-width="12"/><line x1="18" y1="18" x2="52" y2="52" stroke="#fff" stroke-width="14" stroke-linecap="round"/>`,
@@ -308,13 +412,14 @@ function build() {
   };
   const piece = (id, fill, l, r, ic) => `<g id="${id}"><g transform="translate(${-P / 2} ${-P / 2})">
       <path d="${piecePath(P, P, l, r)}" fill="${fill}" stroke="#fff" stroke-width="6" stroke-linejoin="round" filter="url(#shadow)"/></g>${ic}</g>`;
-  s += `<g id="sc6"><g id="cam6">
+  s += `<g id="sc7"><g id="cam7">
     <circle cx="260" cy="860" r="260" fill="#EAF2FC"/><circle cx="1720" cy="180" r="200" fill="#EAF2FC"/>
     ${piece("pzB", C.sky, -1, 1, icon.doc)}
     ${piece("pzC", C.yellow, -1, 0, icon.clock)}
     ${piece("pzA", C.purple, 0, 1, icon.mag)}
-    <g id="s6-frame"><rect x="-200" y="-90" width="400" height="180" rx="26" fill="${C.white}" stroke="${C.purple}" stroke-width="5"/>
-      <g id="s6-frameText"><text x="0" y="12" text-anchor="middle" font-size="36" font-weight="600" fill="${C.purple}">พบสัญญาณลายน้ำ</text></g></g>
+    <g id="s7-frame">${PANEL_RECT}<g id="s7-frameIn">
+      <rect x="-170" y="-14" width="340" height="40" rx="20" fill="${C.track}"/><rect x="-170" y="-14" width="90" height="40" rx="20" fill="${C.purple}"/>
+      <line x1="-10" y1="-40" x2="-10" y2="52" stroke="#8A96AA" stroke-width="3" stroke-dasharray="8 7"/></g></g>
   </g></g>`;
 
   /* ===== Overlays (post-production text) ===== */
@@ -322,8 +427,8 @@ function build() {
     <g id="title"><rect x="460" y="70" width="1000" height="112" rx="56" fill="${C.white}" filter="url(#shadow)"/>
       <circle cx="530" cy="126" r="14" fill="${C.purple}"/><circle cx="530" cy="126" r="28" fill="${C.purple}" opacity=".18"/>
       <text x="990" y="146" text-anchor="middle" font-size="54" font-weight="600" fill="${C.navy}">AI ซ่อนลายน้ำในข้อความอย่างไร?</text></g>
-    <g id="tag"><rect x="64" y="56" width="268" height="66" rx="33" fill="${C.navy}" opacity=".9"/>
-      <text x="198" y="100" text-anchor="middle" font-size="32" font-weight="500" fill="#fff">ภาพเปรียบเทียบ</text></g>
+    <g id="tag"><rect id="tag-bg" x="64" y="40" width="300" height="62" rx="31" fill="${C.navy}" opacity=".9"/>
+      <text id="tag-t" x="96" y="82" font-size="28" font-weight="500" fill="#fff">ภาพเปรียบเทียบ · ตัวอย่างวิธีหนึ่ง</text></g>
     <g id="closing">
       <text x="960" y="230" text-anchor="middle" font-size="76" font-weight="600" fill="${C.navy}">
         <tspan>ไม่พบลายน้ำ</tspan><tspan fill="${C.purple}" dx="28">≠</tspan><tspan dx="28">ไม่ได้ใช้ AI</tspan></text></g>
@@ -336,192 +441,269 @@ function build() {
   let d = "";
   for (let i = 0; i < S3.n; i++) if (DOT_PATTERN[i]) {
     const ln = $("s5l" + i), x = +ln.getAttribute("x") + +ln.getAttribute("width") * DOT_FRAC[i], y = +ln.getAttribute("y") + +ln.getAttribute("height") / 2;
-    d += `<g id="s5d${i}" transform="translate(${x} ${y}) scale(.62)">${dot("s5dd" + i).replace(/^<g id="[^"]+" transform="[^"]+">/, "<g>")}</g>`;
+    d += `<g id="s5d${i}" data-x="${x}" data-y="${y}">${dot("s5dd" + i)}</g>`;
   }
   $("s5-dots").innerHTML = d;
 }
+function fitTag() { attr("tag-bg", { width: $("tag-t").getComputedTextLength() + 64 }); }
 
 /* ---------- narration (voice-over text shown as captions) ---------- */
 const CAPS = [
   [0.3, 3.85, "เมื่อเราขอให้ AI ช่วยเขียน…"],
-  [4.25, 9.85, "ระบบลายน้ำปรับการเลือกคำเล็กน้อย…"],
-  [10.25, 14.85, "จนเกิดรูปแบบที่ซ่อนอยู่ในข้อความ"],
-  [15.25, 18.85, "เราอ่านได้ตามปกติ ไม่เห็นลายน้ำ"],
-  [19.25, 24.85, "เครื่องมือตรวจที่รองรับ อาจพบร่องรอยนี้"],
-  [25.25, 29.9, "แต่ลายน้ำเป็นเพียงหลักฐานส่วนหนึ่ง ไม่ใช่คำตัดสิน"],
+  [4.25, 8.85, "AI จะเขียนทีละคำ โดยให้คะแนนคำถัดไปหลายตัวเลือก"],
+  [9.25, 14.85, "ระบบลายน้ำใช้กุญแจลับกับคำก่อนหน้า สุ่มแบ่งคำออกเป็นสองกลุ่ม"],
+  [15.25, 20.85, "แล้วเพิ่มคะแนนให้ “กลุ่มพิเศษ” เล็กน้อย คำกลุ่มนี้จึงถูกเลือกบ่อยขึ้น"],
+  [21.25, 25.85, "ทำซ้ำทุกคำ โดยกลุ่มพิเศษจะเปลี่ยนไปทุกครั้ง"],
+  [26.25, 29.85, "ข้อความจึงมีคำจากกลุ่มพิเศษมากกว่าปกติ"],
+  [30.25, 33.85, "แต่คนอ่านเห็นเป็นข้อความธรรมดา ไม่เห็นลายน้ำ"],
+  [34.25, 37.45, "เครื่องมือที่มีกุญแจเดียวกัน จะนับคำในกลุ่มพิเศษ"],
+  [37.6, 40.85, "ถ้ามีมากเกินกว่าความบังเอิญ ก็แสดงว่าพบลายน้ำ"],
+  [41.25, 45.85, "แต่ถ้าข้อความสั้น หรือถูกแก้ไขมาก สัญญาณจะอ่อนลง"],
+  [46.25, 51.9, "ลายน้ำจึงเป็นหลักฐานเพียงส่วนหนึ่ง ไม่ใช่คำตัดสิน"],
 ];
-const SCENES = [[0, 4], [4, 10], [10, 15], [15, 19], [19, 25], [25, 30]];
+const SCENES = [[0, 4], [4, 26], [26, 30], [30, 34], [34, 41], [41, 46], [46, 52]];
 
 /* ---------- per-scene render functions ---------- */
 function render1(t) {
   cam("cam1", lerp(960, 1150, prog(t, 0.2, 4)), lerp(540, 520, prog(t, 0.2, 4)), lerp(1, 1.22, prog(t, 0.2, 4)));
-  // paper slides from student to robot
   const pp = prog(t, 0.35, 1.55), px = lerp(790, 1172, pp), py = lerp(568, 556, pp) - 18 * bump(t, 0.35, 1.55);
   tf("s1-paper", `translate(${px} ${py}) rotate(${lerp(-8, 5, pp)})`);
-  // student: right hand follows paper, then lets go and rests
-  const follow = clamp((t - 0.35) / 0.75), release = prog(t, 0.95, 1.6);
-  const shx = 622, shy = 490;
+  const release = prog(t, 0.95, 1.6);
   let hx = Math.min(px - 54, 760), hy = py + 6;
   hx = lerp(hx, 690, release); hy = lerp(hy, 612, release);
   if (t < 0.35) { hx = 736; hy = 574; }
-  setArm("st1-armR", shx, shy, hx, hy);
+  setArm("st1-armR", 622, 490, hx, hy);
   setArm("st1-armL", 498, 490, 520, 610);
-  // student eyes look right & small happy bob
-  tf("st1-eyes", `translate(${6} 0)`);
+  tf("st1-eyes", `translate(6 0)`);
   tf("st1-head", `translate(0 ${-3 * bump(t, 1.4, 2.0)})`);
-  // robot: reaches with left arm, nods, raises pencil with right arm
-  const rsLx = 1294, rsLy = 532, rsRx = 1426, rsRy = 532;
   const reach = prog(t, 0.9, 1.45);
-  setArm("rb1-armL", rsLx, rsLy, lerp(1278, px + 52, reach), lerp(624, py + 10, reach));
+  setArm("rb1-armL", 1294, 532, lerp(1278, px + 52, reach), lerp(624, py + 10, reach));
   const lift = prog(t, 2.15, 3.0, back);
   const rhx = lerp(1450, 1372, lift), rhy = lerp(616, 566, lift);
-  setArm("rb1-armR", rsRx, rsRy, rhx, rhy);
+  setArm("rb1-armR", 1426, 532, rhx, rhy);
   tf("rb1-pencil", `translate(${rhx} ${rhy + 6}) rotate(${lerp(10, -40, lift)})`);
-  const nod = 10 * bump(t, 1.55, 1.9) + 7 * bump(t, 1.9, 2.25);
-  tf("rb1-head", `translate(0 ${nod})`);
+  tf("rb1-head", `translate(0 ${10 * bump(t, 1.55, 1.9) + 7 * bump(t, 1.9, 2.25)})`);
   const blink = 1 - 0.9 * bump(t, 3.2, 3.4);
-  tf("rb1-eyes", `translate(${-8} -226) scale(1 ${blink}) translate(0 226)`);
+  tf("rb1-eyes", `translate(-8 -226) scale(1 ${blink}) translate(0 226)`);
 }
 
-function cardPos2(g, k, t) {
-  // returns {x,y,s,o} for card (g,k)
-  const base = { x: S2.gx[g], y: S2.gy[k] };
-  const pop = prog(t, 4.25 + (g * 3 + k) * 0.06, 4.75 + (g * 3 + k) * 0.06, back);
-  let o = clamp(pop * 2), s = lerp(.6, 1, pop), x = base.x, y = base.y;
-  const T = S2.T[g];
-  if (k === S2.sel[g]) {
-    const lift = bump(t, T - 0.05, T + 1.05);
-    const mv = prog(t, T + 0.2, T + 1.0);
-    x = lerp(base.x, S2.slotX[g], mv); y = lerp(base.y, S2.slotY, mv) - 30 * lift;
-    s *= 1 + 0.08 * lift;
-  } else {
-    o *= lerp(1, 0.25, prog(t, T + 0.2, T + 0.8));
-  }
-  return { x, y, s, o };
-}
 function render2(t) {
-  cam("cam2", lerp(940, 985, prog(t, 4, 10, lin)), lerp(520, 560, prog(t, 4, 10, lin)), lerp(1, 1.05, prog(t, 4, 10, lin)));
-  for (let g = 0; g < 3; g++) for (let k = 0; k < 3; k++) {
-    const c = cardPos2(g, k, t), selActive = k === S2.sel[g] && t > S2.T[g] - 0.05 && t < S2.T[g] + 1.1;
-    tf(`c${g}${k}`, `translate(${c.x} ${c.y}) scale(${c.s})`); op(`c${g}${k}`, c.o);
-    attr(`c${g}${k}-r`, { stroke: selActive ? C.blue : C.edge });
+  const E = ENG;
+  const [cx, cy, sc] = camKF(t, ENG_KF); cam("cam2", cx, cy, sc);
+  let ci = 0; for (let i = 0; i < E.cycles.length; i++) if (t >= E.cycles[i].s) ci = i;
+  const c = E.cycles[ci], ph = phase(ci), nextS = ci < E.cycles.length - 1 ? E.cycles[ci + 1].s : 1e9;
+  const endF = 1 - prog(t, 25.3, 25.75);                  // engine parts leave before scene 3
+  const outF = (1 - prog(t, nextS - 0.2, nextS)) * endF;
+
+  /* candidates, score bars, special-group marks, beams */
+  for (let i = 0; i < 5; i++) {
+    const y = E.candY[i];
+    const a = ci === 0 ? prog(t, 5.0 + i * 0.15, 5.5 + i * 0.15, back) : prog(t, ph.inA, ph.inB);
+    const picked = i === c.P && t >= ph.pick[0];
+    const hi = i === c.P ? prog(t, ph.hi[0], ph.hi[1]) : 0;
+    const s0 = ci === 0 ? lerp(0.6, 1, a) : 1;
+    tf(`cd${i}`, `translate(${E.candX} ${y}) scale(${s0 * (1 + 0.05 * hi)})`);
+    op(`cd${i}`, clamp(a) * outF * (picked ? 0 : 1));
+    const iw = E.inner[(i + ci * 2) % E.inner.length];
+    attr(`cd${i}-a`, { width: (E.cw - 44) * iw[0] }); attr(`cd${i}-b`, { width: (E.cw - 44) * iw[1] });
+    const m = c.G[i] * prog(t, ph.mark[0], ph.mark[1]);
+    attr(`cd${i}-r`, { stroke: hi > 0.01 ? C.blue : mixHex(C.edge, C.purple, m), "stroke-width": 4 + 2 * hi });
+    const markO = m * outF * (i === c.P ? 1 - prog(t, ph.pick[0], ph.pick[0] + 0.25) : 1);
+    tf(`cdm${i}`, `translate(${E.candX - 120} ${y}) scale(${0.72 * Math.max(0.01, c.G[i] * prog(t, ph.mark[0], ph.mark[1], back))})`);
+    op(`cdm${i}`, markO);
+    // bars: base score, then a small purple boost for the special group
+    const bp = ci === 0 ? prog(t, 6.0 + i * 0.1, 6.8 + i * 0.1) : prog(t, ph.bar[0], ph.bar[1]);
+    const bw = c.B[i] * bp, boost = E.boost * c.G[i] * prog(t, ph.boost[0], ph.boost[1]);
+    const barO = outF * (picked ? lerp(1, 0.35, prog(t, ph.pick[0], ph.pick[0] + 0.4)) : 1);
+    attr(`cb${i}`, { width: Math.max(0.01, bw) }); op(`cb${i}`, barO * (bw > 1 ? 1 : 0));
+    attr(`cbb${i}`, { x: E.barX + bw - 14, width: Math.max(0.01, boost + (boost > 0 ? 14 : 0)) }); op(`cbb${i}`, barO * (boost > 0.5 ? 1 : 0));
+    op(`ct${i}`, prog(t, 5.6, 6.2) * endF);
+    // beams from the mixer to the words that join the special group
+    const L = Math.hypot(E.candX - 150 - (E.mixX + 82), y - E.mixY);
+    const bmP = prog(t, ph.beam[0], ph.beam[1]);
+    attr(`bm${i}`, { "stroke-dasharray": L, "stroke-dashoffset": L * (1 - bmP) });
+    op(`bm${i}`, c.G[i] && bmP > 0 ? (1 - prog(t, ph.beam[1], ph.beam[1] + 0.5)) * 0.9 : 0);
   }
-  // the robot hand travels card → slot for each group
-  const off = { x: 1760, y: -160 };
-  let hx = off.x, hy = off.y;
-  for (let g = 0; g < 3; g++) {
-    const T = S2.T[g], k = S2.sel[g], card = { x: S2.gx[g], y: S2.gy[k] };
-    const prev = g === 0 ? off : { x: S2.slotX[g - 1], y: S2.slotY };
-    if (t >= T - 0.75) {
-      const a = prog(t, T - 0.75, T);
-      hx = lerp(prev.x, card.x, a); hy = lerp(prev.y - 64, card.y - 64, a);
-      if (g === 0) hy = lerp(prev.y, card.y - 64, a);
+
+  /* secret key + mixer */
+  const mxIn = prog(t, 9.3, 9.9, back);
+  const spin = prog(t, ph.spin[0], ph.spin[1]);
+  tf("mixer", `translate(${E.mixX} ${E.mixY}) scale(${Math.max(0.01, mxIn) * (1 + 0.06 * bump(t, ph.spin[0], ph.spin[1]))})`);
+  op("mixer", prog(t, 9.3, 9.6) * endF);
+  tf("mx-arrows", `rotate(${360 * (ci + spin)})`);
+  op("mx-glow", 0.55 * bump(t, ph.spin[0], ph.spin[1] + 0.2));
+  const kp = prog(t, 9.4, 10.4);
+  const kx = lerp(-160, E.keyDock[0], kp), ky = lerp(250, E.keyDock[1], kp) - 60 * bump(t, 9.4, 10.4);
+  tf("e-key", `translate(${kx} ${ky}) rotate(${lerp(-70, 0, kp)}) scale(${1 + 0.1 * bump(t, ph.spin[0], ph.spin[1])})`);
+  op("e-key", prog(t, 9.4, 9.6) * endF);
+
+  /* previous word copies down into the mixer */
+  const gp = prog(t, ph.ghost[0], ph.ghost[1]);
+  const gx = lerp(E.slotX - E.step, E.mixX, gp), gy = lerp(E.rowY, E.mixY - 70, gp) - 30 * bump(t, ph.ghost[0], ph.ghost[1]);
+  tf("ghost", `translate(${gx} ${gy}) scale(${lerp(1, 0.4, gp)})`);
+  op("ghost", t >= ph.ghost[0] && t <= ph.ghost[1] + 0.05 ? prog(t, ph.ghost[0], ph.ghost[0] + 0.1) * (1 - prog(t, ph.ghost[1] - 0.15, ph.ghost[1])) : 0);
+
+  /* written row: shifts left after each pick, then regroups into scene 3's row */
+  let shiftSum = 0;
+  E.cycles.forEach((_, j) => { const pj = phase(j); if (pj.shift) shiftSum += prog(t, pj.shift[0], pj.shift[1]); });
+  const fin = prog(t, 25.35, 26.0);
+  for (let k = 0; k < 6; k++) {
+    let x = E.slotX + (k - 2) * E.step - E.step * shiftSum, y = E.rowY, o = 1, s = 1, dotA = 0;
+    if (k < 2) {
+      const a = prog(t, 4.2 + k * 0.1, 4.6 + k * 0.1, back); s = lerp(0.6, 1, a); o = clamp(a);
+      dotA = WRITTEN_DOT[k] ? prog(t, 4.5, 4.9, back) : 0;
+    } else {
+      const j = k - 2, cj = E.cycles[j], pj = phase(j);
+      if (t < pj.pick[0]) o = 0;
+      const p = prog(t, pj.pick[0], pj.pick[1]);
+      x = lerp(E.candX, x, p); y = lerp(E.candY[cj.P], E.rowY, p) - 50 * bump(t, pj.pick[0], pj.pick[1]);
+      s = 1 + 0.08 * bump(t, pj.pick[0], pj.pick[1]);
+      dotA = cj.G[cj.P] ? prog(t, pj.dot[0], pj.dot[1], back) : 0;
     }
-    if (t >= T) { const c = cardPos2(g, k, t); hx = c.x; hy = c.y - 64 * c.s; }
+    x = lerp(x, 960 + (k - 2.5) * S3.gap, fin); y = lerp(y, S3.rowY, fin);
+    tf(`w${k}`, `translate(${x} ${y}) scale(${s})`); op(`w${k}`, o);
+    tf(`wd${k}`, `translate(${x} ${y + 60}) scale(${Math.max(0.01, dotA)})`); op(`wd${k}`, o * (dotA > 0.01 ? 1 : 0));
   }
-  if (t > 9.25) { const a = prog(t, 9.25, 9.85, ein); hx = lerp(S2.slotX[2], off.x, a); hy = lerp(S2.slotY - 64, off.y, a); }
-  const ax = hx + 520, ay = hy - 700;
-  attr("s2-arm", { x1: ax, y1: ay, x2: hx, y2: hy - 30 }); attr("s2-arm-o", { x1: ax, y1: ay, x2: hx, y2: hy - 30 });
-  tf("s2-mitt", `translate(${hx} ${hy})`);
-  // purple dots appear under some of the chosen words
-  for (let g = 0; g < 3; g++) if (S2.dotted[g]) {
-    const T = S2.T[g], a = prog(t, T + 1.0, T + 1.4, back);
-    tf(`s2-dot${g}`, `translate(${S2.slotX[g]} ${S2.slotY + 82}) scale(${Math.max(0, a)})`); op(`s2-dot${g}`, prog(t, T + 1.0, T + 1.2));
-  }
+  // dashed slot for the next word
+  let occ = 0;
+  E.cycles.forEach((_, j) => { const pj = phase(j);
+    occ = Math.max(occ, prog(t, pj.pick[1] - 0.3, pj.pick[1]) * (pj.shift ? 1 - prog(t, pj.shift[1] - 0.1, pj.shift[1] + 0.15) : 1)); });
+  op("e-slot", prog(t, 4.4, 4.8) * (1 - occ) * (1 - prog(t, 25.2, 25.5)) * (0.65 + 0.35 * Math.sin(t * 5)));
+
+  /* post-production labels */
+  lbl("l-written", t, 4.5, 9.0); lbl("l-next", t, 5.2, 9.2); lbl("l-score", t, 6.3, 9.2);
+  lbl("l-key", t, 9.9, 14.9); lbl("l-prev", t, 9.95, 11.3);
+  lbl("l-group", t, 12.8, 25.3); lbl("l-boost", t, 15.6, 18.6);
 }
 
 function render3(t) {
-  cam("cam3", 960, lerp(500, 545, prog(t, 10, 15)), lerp(1.12, 1.0, prog(t, 10, 15)));
-  const bgP = prog(t, 11.6, 13.6);
+  const l = t - 26;
+  cam("cam3", 960, lerp(540, 545, prog(l, 0, 4)), lerp(1.0, 0.97, prog(l, 0, 4)));
+  const bgP = prog(l, 1.0, 3.0);
   attr("s3-bg", { fill: mixHex(C.pale, C.cream, bgP) }); op("s3-grid", 0.8 * (1 - bgP));
-  const pp = prog(t, 10.1, 10.8);
+  const pp = prog(l, 0.0, 0.6);
   tf("s3-paper", `translate(0 ${lerp(70, 0, pp)})`); op("s3-paper", pp);
-  op("s3-extra", prog(t, 12.0, 12.5));
+  op("s3-extra", prog(l, 1.7, 2.1));
   for (let i = 0; i < S3.n; i++) {
     const cx = 960 + (i - 2.5) * S3.gap, cy = S3.rowY;
-    const appear = prog(t, 10.0 + i * 0.05, 10.4 + i * 0.05, eout);
-    const m = prog(t, 11.0 + i * 0.16, 11.9 + i * 0.16);
-    const x = lerp(cx - S3.cw / 2, S3.lx, m), y = lerp(cy - S3.ch / 2, S3.ly + i * S3.lgap, m) - 26 * bump(t, 11.0 + i * 0.16, 11.9 + i * 0.16);
+    const a0 = 0.5 + i * 0.14, m = prog(l, a0, a0 + 0.8);
+    const x = lerp(cx - S3.cw / 2, S3.lx, m), y = lerp(cy - S3.ch / 2, S3.ly + i * S3.lgap, m) - 26 * bump(l, a0, a0 + 0.8);
     const w = lerp(S3.cw, S3.lw[i], m), h = lerp(S3.ch, S3.lh, m);
     attr(`s3c${i}-r`, { x, y, width: w, height: h, rx: lerp(18, S3.lh / 2, m), fill: mixHex(C.white, C.gray, m), "stroke-opacity": 1 - m });
-    op(`s3c${i}`, appear);
-    const inner = 1 - clamp(m * 2.5);
-    op(`s3c${i}-in`, inner);
-    attr(`s3c${i}-a`, { x: x + 22, y: y + h * 0.3, width: w * 0.55 });
-    attr(`s3c${i}-b`, { x: x + 22, y: y + h * 0.58, width: w * 0.38 });
+    op(`s3c${i}-in`, 1 - clamp(m * 2.5));
+    attr(`s3c${i}-a`, { x: x + 22, y: y + h * 0.3, width: w * 0.55 * (1 - m) + 1 });
+    attr(`s3c${i}-b`, { x: x + 22, y: y + h * 0.58, width: w * 0.38 * (1 - m) + 1 });
     if (DOT_PATTERN[i]) {
-      const dx = lerp(cx, S3.lx + S3.lw[i] * DOT_FRAC[i], m), dy = lerp(cy + 74, S3.ly + i * S3.lgap + S3.lh / 2, m);
-      const blinkP = bump(t, 12.55, 13.05);
-      const sc = lerp(1, 0.8, m) * (1 + 0.7 * blinkP);
-      tf(`s3d${i}`, `translate(${dx} ${dy}) scale(${sc})`);
-      op(`s3d${i}`, appear * (1 - prog(t, 13.25, 14.05)));
-      const ring = prog(t, 12.55, 13.2, eout);
-      attr(`s3d${i}-ring`, { r: 14 + 30 * ring, opacity: (t > 12.55 ? 1 - ring : 0).toFixed(3) });
+      const dx = lerp(cx, S3.lx + S3.lw[i] * DOT_FRAC[i], m), dy = lerp(cy + 60, S3.ly + i * S3.lgap + S3.lh / 2, m);
+      const blinkP = bump(l, 2.15, 2.6);
+      tf(`s3d${i}`, `translate(${dx} ${dy}) scale(${lerp(1, 0.8, m) * (1 + 0.7 * blinkP)})`);
+      op(`s3d${i}`, 1 - prog(l, 2.8, 3.6));
+      const ring = prog(l, 2.15, 2.8, eout);
+      attr(`s3d${i}-ring`, { r: 14 + 30 * ring, opacity: (l > 2.15 ? 1 - ring : 0).toFixed(3) });
     }
   }
 }
 
 function render4(t) {
-  const z = prog(t, 17.05, 18.95);
+  const l = t - 30;
+  const z = prog(l, 2.05, 3.95);
   cam("cam4", lerp(960, 930, z), lerp(540, 640, z), lerp(1, 1.75, z));
-  // student holds the paper, reads top → bottom, then nods
-  const read = clamp((t - 15.3) / 1.7);
-  const ex = 9 + 4 * Math.sin(read * Math.PI * 6), ey = lerp(-4, 9, read);
-  tf("st4-eyes", `translate(${ex} ${ey})`);
-  const nod = 9 * bump(t, 16.95, 17.3) + 6 * bump(t, 17.3, 17.6);
-  tf("st4-head", `translate(0 ${nod})`);
+  const read = clamp((l - 0.3) / 1.7);
+  tf("st4-eyes", `translate(${9 + 4 * Math.sin(read * Math.PI * 6)} ${lerp(-4, 9, read)})`);
+  tf("st4-head", `translate(0 ${9 * bump(l, 1.95, 2.3) + 6 * bump(l, 2.3, 2.6)})`);
   const breathe = 2 * Math.sin(t * 3);
   tf("s4-paper", `translate(930 ${655 + breathe}) rotate(-4)`);
   setArm("st4-armL", 619, 692, 806, 800 + breathe);
   setArm("st4-armR", 781, 692, 1066, 752 + breathe);
-  // robot hovers calmly and blinks
-  const bob = 5 * Math.sin((t - 15) * 2.4);
+  const bob = 5 * Math.sin(l * 2.4);
   tf("rb4w", `translate(1480 ${860 + bob})`);
   setArm("rb4-armL", 1410, 740 + bob, 1392, 836 + bob);
   setArm("rb4-armR", 1550, 740 + bob, 1568, 836 + bob);
-  const blink = 1 - 0.9 * (bump(t, 16.1, 16.3) + bump(t, 18.2, 18.4));
+  const blink = 1 - 0.9 * (bump(l, 1.1, 1.3) + bump(l, 3.2, 3.4));
   tf("rb4-eyes", `translate(-6 -226) scale(1 ${blink}) translate(0 226)`);
 }
 
 function render5(t) {
-  cam("cam5", lerp(990, 1010, prog(t, 19, 25, lin)), 470, lerp(1.0, 1.04, prog(t, 19, 25, lin)));
-  const sy = lerp(194, 600, prog(t, 19.8, 22.6, lin));
-  tf("s5-scan", `translate(0 ${sy})`); op("s5-scan", prog(t, 19.6, 19.85) * (1 - prog(t, 22.5, 22.9)));
+  const l = t - 34;
+  cam("cam5", lerp(990, 1010, prog(l, 0, 7, lin)), 470, lerp(1.0, 1.04, prog(l, 0, 7, lin)));
+  // the same secret key plugs into the detector
+  const kp = prog(l, 0.2, 1.1);
+  tf("s5-key", `translate(${lerp(-150, 676, kp)} ${lerp(120, 230, kp) - 50 * bump(l, 0.2, 1.1)}) rotate(${lerp(-60, 0, kp)}) scale(.62)`);
+  op("s5-key", prog(l, 0.2, 0.4));
+  op("s5-keyglow", 0.6 * bump(l, 1.0, 1.7));
+  const sy = lerp(194, 600, prog(l, 1.2, 3.6, lin));
+  tf("s5-scan", `translate(0 ${sy})`); op("s5-scan", prog(l, 1.0, 1.25) * (1 - prog(l, 3.5, 3.9)));
   for (let i = 0; i < S3.n; i++) if (DOT_PATTERN[i]) {
-    const ln = $("s5l" + i), y = +ln.getAttribute("y");
-    const a = clamp((sy - y) / 40);
-    op("s5d" + i, a);
-    const g = $("s5d" + i), base = g.getAttribute("transform").replace(/ scale\([^)]+\)/, "");
-    g.setAttribute("transform", `${base} scale(${0.62 * (0.6 + 0.4 * back(a))})`);
+    const g = $("s5d" + i), y = +g.dataset.y, a = clamp((sy - y) / 40);
+    g.setAttribute("opacity", a.toFixed(3));
+    g.setAttribute("transform", `translate(${g.dataset.x} ${y}) scale(${0.62 * (0.6 + 0.4 * back(a))})`);
   }
-  const r = prog(t, 23.0, 23.6, back);
-  tf("s5-result", `translate(1620 390) scale(${Math.max(0.01, r)})`); op("s5-result", prog(t, 23.0, 23.25));
-  op("s5-resultText", CAPTIONS ? prog(t, 23.4, 23.8) : 0);
+  const r = prog(l, 3.8, 4.4, back);
+  tf("s5-result", `translate(1640 400) scale(${Math.max(0.01, r)})`); op("s5-result", prog(l, 3.8, 4.05));
+  attr("s5-b1", { width: Math.max(0.01, 155 * prog(l, 4.5, 5.3)) });
+  attr("s5-b2", { width: Math.max(0.01, 300 * prog(l, 4.8, 5.9)) });
+  op("s5-lbls", CAPTIONS ? prog(l, 4.6, 5.0) : 0);
+  op("s5-title", CAPTIONS ? prog(l, 5.9, 6.3) : 0);
 }
 
 function render6(t) {
-  cam("cam6", 960, lerp(500, 530, prog(t, 25, 30)), lerp(1.1, 1.0, prog(t, 25, 30)));
+  const l = t - 41;
+  cam("cam6", 960, 520, lerp(1.03, 1.0, prog(l, 0, 5)));
+  // 1) short text: lower lines disappear
+  for (let i = 3; i < 8; i++) {
+    const a = 0.4 + (7 - i) * 0.18;
+    op(`s6l${i}`, 1 - prog(l, a, a + 0.35));
+    if (DOT_PATTERN[i]) op(`s6d${i}`, 1 - prog(l, a, a + 0.35));
+  }
+  const shortP = prog(l, 0.6, 1.7);
+  attr("s6p", { height: lerp(480, 210, shortP) });
+  // 2) edited text: a pencil rewrites the remaining lines, the hidden dots pop away
+  let popped = 0, px = 1180, py = 330, rot = 30;
+  for (let i = 0; i < 3; i++) {
+    const a = 2.0 + i * 0.7, p = prog(l, a, a + 0.7, lin);
+    const w0 = S6.lw * LINE_W[i], w1 = S6.lw * S6.newW[i];
+    attr(`s6l${i}`, { width: lerp(w0, w1, p), fill: mixHex(C.gray, "#8FBBEF", bump(l, a, a + 0.9)) });
+    if (l >= a && l < a + 0.7) { px = S6.lx + lerp(0, Math.max(w0, w1), p); py = S6.ly + i * S6.lgap + 7; rot = 25; }
+    if (DOT_PATTERN[i]) {
+      const tp = a + 0.7 * DOT_FRAC[i], q = prog(l, tp, tp + 0.25);
+      popped += q;
+      tf(`s6d${i}`, `translate(${S6.lx + S6.lw * LINE_W[i] * DOT_FRAC[i]} ${S6.ly + i * S6.lgap + 7}) scale(${Math.max(0.01, 1 + 0.6 * bump(l, tp, tp + 0.12) - q)})`);
+      op(`s6d${i}`, 1 - q);
+    }
+  }
+  if (l < 2.0) { const p = prog(l, 1.6, 2.0); px = lerp(1180, S6.lx, p); py = lerp(330, S6.ly + 7, p); }
+  if (l >= 4.1) { const p = prog(l, 4.1, 4.6); px = lerp(S6.lx + S6.lw * S6.newW[2], 1180, p); py = lerp(S6.ly + 2 * S6.lgap + 7, 330, p); }
+  const th = rot * Math.PI / 180;
+  tf("s6-pencil", `translate(${px + 33 * Math.sin(th)} ${py - 33 * Math.cos(th)}) rotate(${rot})`);
+  op("s6-pencil", prog(l, 1.6, 1.8) * (1 - prog(l, 4.3, 4.6)));
+  attr("s6-fill", { width: Math.max(40, 300 - 85 * shortP - 62 * popped) });
+  op("s6-title", CAPTIONS ? prog(l, 0.2, 0.6) : 0);
+  op("s6-lbls", CAPTIONS ? prog(l, 0.4, 0.8) : 0);
+  lbl("s6-lab1", t, 41.3, 42.9); lbl("s6-lab2", t, 42.9, 45.8);
+}
+
+function render7(t) {
+  const l = t - 46;
+  cam("cam7", 960, lerp(500, 530, prog(l, 0, 6)), lerp(1.1, 1.0, prog(l, 0, 6)));
   const P = 240, fin = { A: [600 + P / 2, 560], B: [840 + P / 2, 560], C: [1080 + P / 2, 560] };
-  // frame → purple piece
-  const f = prog(t, 25.0, 25.9);
   const pre = { A: [fin.A[0] - 70, 560], B: [fin.B[0], 600], C: [fin.C[0] + 70, 560] };
-  const fx = lerp(1620, pre.A[0], f), fy = lerp(390, pre.A[1], f);
-  tf("s6-frame", `translate(${fx} ${fy}) scale(${lerp(1, 0.55, f)})`);
-  op("s6-frame", 1 - prog(t, 25.55, 26.0));
-  op("s6-frameText", CAPTIONS ? 1 - prog(t, 25.1, 25.5) : 0);
-  const asm = prog(t, 27.45, 28.6, back);
+  // signal meter → purple puzzle piece
+  const f = prog(l, 0.0, 0.9);
+  const fx = lerp(1420, pre.A[0], f), fy = lerp(480, pre.A[1], f);
+  tf("s7-frame", `translate(${fx} ${fy}) scale(${lerp(1, 0.6, f)})`);
+  op("s7-frame", 1 - prog(l, 0.55, 1.0));
+  op("s7-frameIn", 1 - prog(l, 0.1, 0.45));
+  const asm = prog(l, 2.45, 3.6, back);
   const A = { x: lerp(pre.A[0], fin.A[0], asm), y: lerp(pre.A[1], fin.A[1], asm), r: lerp(-6, 0, asm) };
-  const aIn = prog(t, 25.5, 26.1, back);
-  tf("pzA", `translate(${f < 1 ? fx : A.x} ${f < 1 ? fy : A.y}) rotate(${A.r}) scale(${Math.max(0.01, aIn)})`); op("pzA", prog(t, 25.5, 25.8));
-  const bIn = prog(t, 26.0, 27.0, eout), cIn = prog(t, 26.3, 27.3, eout);
-  const B = { x: lerp(pre.B[0], fin.B[0], asm), y: lerp(pre.B[1] + 520 * (1 - bIn), fin.B[1], asm), r: lerp(5, 0, asm) };
-  const Cc = { x: lerp(pre.C[0] + 760 * (1 - cIn), fin.C[0], asm), y: lerp(pre.C[1], fin.C[1], asm), r: lerp(7, 0, asm) };
-  tf("pzB", `translate(${B.x} ${B.y}) rotate(${B.r})`); op("pzB", prog(t, 26.0, 26.3));
-  tf("pzC", `translate(${Cc.x} ${Cc.y}) rotate(${Cc.r})`); op("pzC", prog(t, 26.3, 26.6));
+  const aIn = prog(l, 0.5, 1.1, back);
+  tf("pzA", `translate(${f < 1 ? fx : A.x} ${f < 1 ? fy : A.y}) rotate(${A.r}) scale(${Math.max(0.01, aIn)})`); op("pzA", prog(l, 0.5, 0.8));
+  const bIn = prog(l, 1.0, 2.0, eout), cIn = prog(l, 1.3, 2.3, eout);
+  tf("pzB", `translate(${lerp(pre.B[0], fin.B[0], asm)} ${lerp(pre.B[1] + 520 * (1 - bIn), fin.B[1], asm)}) rotate(${lerp(5, 0, asm)})`); op("pzB", prog(l, 1.0, 1.3));
+  tf("pzC", `translate(${lerp(pre.C[0] + 760 * (1 - cIn), fin.C[0], asm)} ${lerp(pre.C[1], fin.C[1], asm)}) rotate(${lerp(7, 0, asm)})`); op("pzC", prog(l, 1.3, 1.6));
 }
 
 /* ---------- master render ---------- */
-const sceneFns = [render1, render2, render3, render4, render5, render6];
+const sceneFns = [render1, render2, render3, render4, render5, render6, render7];
 function render(t) {
   t = clamp(t, 0, DUR);
   SCENES.forEach(([a, b], i) => {
@@ -536,16 +718,15 @@ function render(t) {
   // overlays
   op("title", CAPTIONS ? prog(t, 0.1, 0.6) * (1 - prog(t, 3.3, 3.8)) : 0);
   tf("title", `translate(0 ${lerp(-20, 0, prog(t, 0.1, 0.7, eout))})`);
-  op("tag", CAPTIONS ? prog(t, 4.4, 4.8) * (1 - prog(t, 9.6, 9.95)) : 0);
-  op("closing", CAPTIONS ? prog(t, 28.3, 28.9) : 0);
-  tf("closing", `translate(0 ${lerp(16, 0, prog(t, 28.3, 28.9, eout))})`);
+  op("tag", CAPTIONS ? prog(t, 4.4, 4.8) * (1 - prog(t, 29.4, 29.8)) : 0);
+  op("closing", CAPTIONS ? prog(t, 49.4, 50.0) : 0);
+  tf("closing", `translate(0 ${lerp(16, 0, prog(t, 49.4, 50.0, eout))})`);
   const cap = CAPTIONS ? CAPS.find(([a, b]) => t >= a && t < b) : null;
   if (cap) {
     const tx = $("cap-t");
     if (tx.textContent !== cap[2]) {
       tx.textContent = cap[2];
-      const w = tx.getComputedTextLength() + 96;
-      attr("cap-bg", { x: 960 - w / 2, width: w });
+      attr("cap-bg", { x: 960 - (tx.getComputedTextLength() + 96) / 2, width: tx.getComputedTextLength() + 96 });
     }
     op("cap", prog(t, cap[0], cap[0] + 0.25) * (1 - prog(t, cap[1] - 0.2, cap[1])));
   } else op("cap", 0);
@@ -567,8 +748,11 @@ playBtn.onclick = () => {
 scrub.oninput = () => { playing = false; playBtn.textContent = "▶ เล่น"; setT(+scrub.value); };
 $("caps").checked = CAPTIONS;
 $("caps").onchange = e => { CAPTIONS = e.target.checked; $("cap-t").textContent = ""; render(cur); };
+window.__DUR = DUR;
 window.__setTime = t => { render(t); };
-Promise.all(["500 40px Prompt","600 40px Prompt"].map(f => document.fonts.load(f, "กขAI"))).then(() => document.fonts.ready).then(() => { window.__ready = true; setT(0); t0 = performance.now(); requestAnimationFrame(loop); });
+Promise.all(["500 40px Prompt", "600 40px Prompt"].map(f => document.fonts.load(f, "กขAI")))
+  .then(() => document.fonts.ready)
+  .then(() => { fitTag(); window.__ready = true; setT(0); t0 = performance.now(); requestAnimationFrame(loop); });
 </script>
 </body>
 </html>
