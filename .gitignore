@@ -2,3 +2,4 @@
 assets/audio/bg_music.mp3
 output/*_raw.wav
 output/mix.wav
+__pycache__/
