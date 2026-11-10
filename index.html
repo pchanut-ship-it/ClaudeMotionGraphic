@@ -42,20 +42,22 @@
   </div>
   <div class="controls">
     <button id="play">⏸ หยุด</button>
-    <input id="scrub" type="range" min="0" max="52" step="0.01" value="0">
-    <span class="time" id="time">0.00 / 52.00</span>
-    <label><input id="caps" type="checkbox" checked> คำบรรยาย/ข้อความ</label>
+    <input id="scrub" type="range" min="0" max="56" step="0.01" value="0">
+    <span class="time" id="time">0.00 / 56.00</span>
+    <label><input id="caps" type="checkbox" checked> ข้อความบนจอ</label>
+    <label><input id="subs" type="checkbox" checked> ซับไตเติล</label>
   </div>
 </div>
 
 <script>
 /* =========================================================================
-   "ร่องรอยลับในข้อความ AI" — 52 s explainer, 7 scenes (see STORYBOARD.md).
+   "ร่องรอยลับในข้อความ AI" — 56 s explainer: 7 scenes + music credit card (see STORYBOARD.md).
    Everything is a pure function of time t (seconds) → render(t), so the
    piece can be scrubbed in the browser and captured frame-by-frame.
-   URL params:  ?render=1  (1920×1080, no UI, paused)   ?captions=0 (clean plate)
+   URL params:  ?render=1  (1920×1080, no UI, paused)   ?captions=0 (clean plate, no text)
+                ?subs=0 (hide only the bottom subtitles; title, labels and closing text stay)
    ========================================================================= */
-const DUR = 52;
+const DUR = 56;
 const C = {
   cream: "#FBF6EC", navy: "#1E3A6E", blue: "#2F6FD6", sky: "#4AA3F0", pale: "#DDEBFA",
   paleLine: "#C6DAF2", white: "#FFFFFF", edge: "#CFDDEE", gray: "#B9C2CF", track: "#EEF0F5",
@@ -64,6 +66,7 @@ const C = {
 const params = new URLSearchParams(location.search);
 const RENDER = params.get("render") === "1";
 let CAPTIONS = params.get("captions") !== "0";
+let SUBS = params.get("subs") !== "0";
 if (RENDER) document.body.classList.add("render");
 
 /* ---------- math helpers ---------- */
@@ -432,6 +435,20 @@ function build() {
     <g id="closing">
       <text x="960" y="230" text-anchor="middle" font-size="76" font-weight="600" fill="${C.navy}">
         <tspan>ไม่พบลายน้ำ</tspan><tspan fill="${C.purple}" dx="28">≠</tspan><tspan dx="28">ไม่ได้ใช้ AI</tspan></text></g>
+    <g id="credits" opacity="0">
+      <rect x="0" y="0" width="1920" height="1080" fill="${C.cream}"/>
+      <circle cx="1720" cy="180" r="200" fill="#EAF2FC"/><circle cx="220" cy="900" r="240" fill="#EAF2FC"/>
+      <g transform="translate(960 330)">
+        <circle r="74" fill="${C.purple}"/><circle r="104" fill="${C.purple}" opacity=".14"/>
+        <ellipse cx="-21" cy="24" rx="16" ry="12" fill="#fff" transform="rotate(-18 -21 24)"/>
+        <ellipse cx="25" cy="14" rx="16" ry="12" fill="#fff" transform="rotate(-18 25 14)"/>
+        <rect x="-8" y="-36" width="7" height="60" fill="#fff"/><rect x="38" y="-46" width="7" height="60" fill="#fff"/>
+        <polygon points="-8,-36 45,-46 45,-31 -8,-21" fill="#fff"/>
+      </g>
+      <text x="960" y="508" text-anchor="middle" font-size="50" font-weight="600" fill="${C.navy}">Music track: A Better Future by Bluewave</text>
+      <text x="960" y="586" text-anchor="middle" font-size="38" font-weight="500" fill="${C.blue}">Source: https://freetouse.com/music</text>
+      <text x="960" y="652" text-anchor="middle" font-size="34" font-weight="500" fill="#6B778C">Free To Use Music for Video</text>
+    </g>
     <g id="cap"><rect id="cap-bg" y="930" height="86" rx="43" fill="${C.navy}" opacity=".88"/>
       <text id="cap-t" x="960" y="987" text-anchor="middle" font-size="42" font-weight="500" fill="#fff"></text></g>
   </g>`;
@@ -721,7 +738,8 @@ function render(t) {
   op("tag", CAPTIONS ? prog(t, 4.4, 4.8) * (1 - prog(t, 29.4, 29.8)) : 0);
   op("closing", CAPTIONS ? prog(t, 49.4, 50.0) : 0);
   tf("closing", `translate(0 ${lerp(16, 0, prog(t, 49.4, 50.0, eout))})`);
-  const cap = CAPTIONS ? CAPS.find(([a, b]) => t >= a && t < b) : null;
+  op("credits", prog(t, 52.0, 52.7));
+  const cap = CAPTIONS && SUBS ? CAPS.find(([a, b]) => t >= a && t < b) : null;
   if (cap) {
     const tx = $("cap-t");
     if (tx.textContent !== cap[2]) {
@@ -748,6 +766,8 @@ playBtn.onclick = () => {
 scrub.oninput = () => { playing = false; playBtn.textContent = "▶ เล่น"; setT(+scrub.value); };
 $("caps").checked = CAPTIONS;
 $("caps").onchange = e => { CAPTIONS = e.target.checked; $("cap-t").textContent = ""; render(cur); };
+$("subs").checked = SUBS;
+$("subs").onchange = e => { SUBS = e.target.checked; render(cur); };
 window.__DUR = DUR;
 window.__setTime = t => { render(t); };
 Promise.all(["500 40px Prompt", "600 40px Prompt"].map(f => document.fonts.load(f, "กขAI")))

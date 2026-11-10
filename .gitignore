@@ -1,0 +1,4 @@
+# Licensed music track: kept locally, not redistributed in the repo (see README)
+assets/audio/bg_music.mp3
+output/*_raw.wav
+output/mix.wav

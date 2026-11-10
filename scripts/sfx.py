@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synthesize the sound-effects track for index.html (52 s) — no samples, no licences.
+"""Synthesize the sound-effects track for index.html (56 s) — no samples, no licences.
 
 Every sound is generated from sine waves and filtered noise, then placed on a cue
 list whose times come from the animation timeline in index.html.
@@ -10,7 +10,7 @@ import sys, wave
 import numpy as np
 
 SR = 48000
-DUR = 52.0
+DUR = 56.0
 rng = np.random.default_rng(7)
 
 
