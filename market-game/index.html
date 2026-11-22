@@ -74,7 +74,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
 .tbtn.pressed{transform:translateY(calc(var(--u)*.4));box-shadow:0 calc(var(--u)*.1) 0 var(--ink);}
 
 /* ---------- ป้ายสถานะ (มุมบนซ้าย) ---------- */
-.status{position:absolute;top:calc(var(--u)*1);left:calc(var(--u)*1.2);z-index:30;max-width:calc(var(--u)*120);
+.status{position:absolute;top:calc(var(--u)*1);left:calc(var(--u)*1.2);z-index:30;max-width:calc(var(--u)*112);
   background:var(--paper);border:calc(var(--u)*.35) solid var(--ink);border-radius:calc(var(--u)*2);
   padding:0 calc(var(--u)*2);height:calc(var(--u)*6);line-height:calc(var(--u)*5.3);
   font-size:calc(var(--u)*3.4);font-weight:700;white-space:nowrap;overflow:hidden;box-shadow:0 calc(var(--u)*.5) 0 var(--ink);}
@@ -139,7 +139,35 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   transition:transform .08s ease-out, box-shadow .08s ease-out;}
 .card.pressed{transform:translateY(calc(var(--u)*1));box-shadow:0 calc(var(--u)*.2) 0 var(--card-dk);}
 
+/* ---------- เอฟเฟกต์ดาว / กระดาษสี ---------- */
+#fx{position:absolute;left:0;top:0;width:100%;height:100%;z-index:55;pointer-events:none;overflow:hidden;}
+.pt{position:absolute;width:calc(var(--u)*2.4);height:calc(var(--u)*2.4);margin:calc(var(--u)*-1.2) 0 0 calc(var(--u)*-1.2);border-radius:50%;
+  transition:transform .85s cubic-bezier(.12,.75,.3,1), opacity .5s ease-in .4s;}
+.pt.sq{border-radius:calc(var(--u)*.45);}
+.pt.st{width:calc(var(--u)*3.6);height:calc(var(--u)*3.6);margin:calc(var(--u)*-1.8) 0 0 calc(var(--u)*-1.8);border-radius:0;}
+.pt svg,.star-fly svg{display:block;width:100%;height:100%;}
+.cf{position:absolute;top:0;width:calc(var(--u)*1.6);height:calc(var(--u)*2.6);border-radius:calc(var(--u)*.35);}
+.star-fly{position:absolute;width:calc(var(--u)*7);height:calc(var(--u)*7);margin:calc(var(--u)*-3.5) 0 0 calc(var(--u)*-3.5);
+  transition:transform .7s cubic-bezier(.5,-0.2,.4,1);}
+
+/* ---------- เข้าฉาก + เคลื่อนไหวเบา ๆ (อยู่ก่อน .shake เพื่อให้ .shake ชนะ) ---------- */
+.in-drop{animation:dropin .55s cubic-bezier(.3,1.35,.55,1) backwards;}
+.in-pop{animation:popin .5s ease-out backwards;}
+.in-rise{animation:riseup .45s ease-out backwards;}
+.in-swing{animation:swingin .9s ease-out backwards;transform-origin:50% 0;}
+.pic-emo{display:inline-block;animation:bob 3s ease-in-out infinite;}
+.sc{animation:bob 2.8s ease-in-out infinite;}
+.sc:nth-child(2){animation-delay:-.9s;} .sc:nth-child(3){animation-delay:-1.8s;} .sc:nth-child(4){animation-delay:-.4s;}
+.shop-emo{animation:bob 3.2s ease-in-out infinite;}
+.shop.s2 .shop-emo{animation-delay:-1.6s;}
+.title-board .wood-frame,.cover-frame{animation:sway 5s ease-in-out infinite;transform-origin:50% -40%;}
+.blank.active{animation:glow 1.6s ease-in-out infinite;}
+.blank.shake{animation:shake .45s ease-in-out;}
+.blank.wave{animation:hopword .55s ease-out backwards;}
+.pb.pop{animation:pop .4s ease-out;}
+
 /* สถานะร่วมของตัวที่ลากได้ */
+.fitting,.fitting *{animation:none !important;}
 .ghost{opacity:.25 !important;}
 .gone{visibility:hidden !important;}
 .shake{animation:shake .45s ease-in-out;}
@@ -164,7 +192,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
 .big-check{display:none;position:absolute;right:calc(var(--u)*-5);top:calc(var(--u)*-5);width:calc(var(--u)*13);height:calc(var(--u)*13);
   border-radius:50%;background:#1f8a3c;color:#fff;border:calc(var(--u)*.7) solid #fff;box-shadow:0 0 0 calc(var(--u)*.45) var(--ink);
   font-size:calc(var(--u)*8.4);line-height:calc(var(--u)*11.4);text-align:center;}
-.big-check.show{display:block;animation:pop .45s ease-out;}
+.big-check.show{display:block;animation:checkin .6s cubic-bezier(.3,1.4,.6,1);}
 .big-check .ic{stroke-width:3.6;vertical-align:-0.08em;}
 
 /* ภาพด้านบน (ด่าน 1) */
@@ -203,10 +231,10 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   display:flex;align-items:center;justify-content:center;background:#fff6dc;}
 .scene-in{white-space:nowrap;}
 .sc{display:inline-block;font-size:calc(var(--u)*16);line-height:1.15;margin:0 calc(var(--u)*2);}
-.scene.happy .sc{animation:hop .7s ease-out 1;}
-.scene.happy .sc:nth-child(2){animation-delay:.12s;}
-.scene.happy .sc:nth-child(3){animation-delay:.24s;}
-.scene.happy .sc:nth-child(4){animation-delay:.36s;}
+.scene.happy .sc{animation:hop .7s ease-out 1, bob 2.8s ease-in-out .8s infinite;}
+.scene.happy .sc:nth-child(2){animation-delay:.12s, .92s;}
+.scene.happy .sc:nth-child(3){animation-delay:.24s, 1.04s;}
+.scene.happy .sc:nth-child(4){animation-delay:.36s, 1.16s;}
 .scene.run .scene-in{animation:runby 1.3s ease-in-out 1;}
 .bg-sky{background:linear-gradient(180deg,#bfe6ff,#fff4c9);}
 .bg-market{background:linear-gradient(180deg,#ffe9c2,#fff8e6);}
@@ -352,6 +380,44 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
 .sum-foot .btn{margin-left:calc(var(--u)*2.5);font-size:calc(var(--u)*4.4);height:calc(var(--u)*12);line-height:calc(var(--u)*10.6);padding:0 calc(var(--u)*3.6);}
 .sum-note{position:absolute;left:calc(var(--u)*4);top:calc(var(--u)*86);line-height:calc(var(--u)*12);font-size:calc(var(--u)*3);font-weight:600;opacity:.85;}
 
+/* ---------- หน้าปก ---------- */
+.bunting{position:absolute;left:0;right:0;top:calc(var(--u)*9.4);height:calc(var(--u)*6);white-space:nowrap;overflow:hidden;text-align:center;pointer-events:none;}
+.bunting:before{content:"";position:absolute;left:0;right:0;top:calc(var(--u)*.4);border-top:calc(var(--u)*.35) solid #7a4a1f;}
+.flag{display:inline-block;vertical-align:top;width:0;height:0;margin:calc(var(--u)*.55) calc(var(--u)*.7) 0;
+  border-left:calc(var(--u)*2.3) solid transparent;border-right:calc(var(--u)*2.3) solid transparent;border-top:calc(var(--u)*4.2) solid #ef661c;}
+.cover-sign{position:absolute;left:0;right:0;top:calc(var(--u)*14);text-align:center;}
+.cover-sign .frame-wrap{position:relative;display:inline-block;}
+.cover-sign .rope{top:calc(var(--u)*-5);height:calc(var(--u)*5.4);}
+.cover-frame .sign-face{padding:calc(var(--u)*.6) calc(var(--u)*7) calc(var(--u)*1.8);}
+.cover-title{font-size:calc(var(--u)*12.6);font-weight:700;line-height:1.32;white-space:nowrap;}
+.cover-sub{font-size:calc(var(--u)*4.8);font-weight:600;line-height:1.35;}
+.cover-badge{position:absolute;right:calc(var(--u)*-8);bottom:calc(var(--u)*-1.6);padding:0 calc(var(--u)*2.4);
+  background:#2b62a8;color:#fff;border:calc(var(--u)*.45) solid #fff;border-radius:calc(var(--u)*3);box-shadow:0 0 0 calc(var(--u)*.35) var(--ink);
+  font-size:calc(var(--u)*3.8);font-weight:700;line-height:calc(var(--u)*6.4);white-space:nowrap;transform:rotate(-6deg);}
+.stalls{position:absolute;left:0;right:0;top:calc(var(--u)*47.5);height:calc(var(--u)*30);}
+.stall{position:absolute;top:0;width:calc(var(--u)*46);height:calc(var(--u)*30);}
+.stall.s-a{left:calc(var(--u)*8);} .stall.s-b{left:calc(var(--u)*65.9);} .stall.s-c{left:calc(var(--u)*123.8);}
+.stall-awn{position:absolute;left:calc(var(--u)*-1.5);right:calc(var(--u)*-1.5);top:0;height:calc(var(--u)*7.5);
+  border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*2) calc(var(--u)*2) calc(var(--u)*.8) calc(var(--u)*.8);
+  background-image:repeating-linear-gradient(90deg,#ef661c 0,#ef661c calc(var(--u)*4.9),#fff4dc calc(var(--u)*4.9),#fff4dc calc(var(--u)*9.8));}
+.s-b .stall-awn{background-image:repeating-linear-gradient(90deg,#2f8f4e 0,#2f8f4e calc(var(--u)*4.9),#eafbe9 calc(var(--u)*4.9),#eafbe9 calc(var(--u)*9.8));}
+.s-c .stall-awn{background-image:repeating-linear-gradient(90deg,#2b62a8 0,#2b62a8 calc(var(--u)*4.9),#e6f0ff calc(var(--u)*4.9),#e6f0ff calc(var(--u)*9.8));}
+.stall-pole{position:absolute;top:calc(var(--u)*7.5);width:calc(var(--u)*1.3);height:calc(var(--u)*14);background:#7a4a1f;}
+.stall-pole.l{left:calc(var(--u)*2.5);} .stall-pole.r{right:calc(var(--u)*2.5);}
+.stall-goods{position:absolute;left:0;right:0;top:calc(var(--u)*11.2);text-align:center;white-space:nowrap;}
+.stall-goods span{display:inline-block;font-size:calc(var(--u)*8.6);line-height:1.1;margin:0 calc(var(--u)*.3);animation:bob 2.6s ease-in-out infinite;}
+.stall-counter{position:absolute;left:0;right:0;bottom:0;height:calc(var(--u)*9);text-align:center;
+  border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.2);background-color:#b9763a;background-image:linear-gradient(180deg,#d39556,#a9672f);}
+.stall-label{display:inline-block;margin-top:calc(var(--u)*1.5);padding:0 calc(var(--u)*2.2);background:var(--paper);
+  border:calc(var(--u)*.3) solid var(--ink);border-radius:calc(var(--u)*1.6);font-size:calc(var(--u)*3.8);font-weight:700;line-height:calc(var(--u)*5);}
+.walker{position:absolute;top:calc(var(--u)*75.5);left:31%;z-index:2;white-space:nowrap;pointer-events:none;animation:walkacross 20s linear infinite;}
+.walker span{display:inline-block;font-size:calc(var(--u)*8.5);line-height:1;animation:step .45s ease-in-out infinite alternate;}
+.walker .wb{font-size:calc(var(--u)*5.6);margin-left:calc(var(--u)*-1);animation-delay:.22s;}
+.cover-foot{position:absolute;left:0;right:0;top:calc(var(--u)*80.5);text-align:center;z-index:4;}
+.cover-note{position:absolute;left:calc(var(--u)*4);top:calc(var(--u)*86.5);font-size:calc(var(--u)*3.1);font-weight:600;line-height:1.45;opacity:.85;}
+.btn.breathe{animation:ring 1.8s ease-out infinite;}
+.btn.breathe.pressed{animation:none;}
+
 /* ---------- ภาพเคลื่อนไหว ---------- */
 @keyframes enter{from{opacity:0}to{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10%)}40%{transform:translateX(9%)}60%{transform:translateX(-6%)}80%{transform:translateX(4%)}}
@@ -362,6 +428,18 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
 @keyframes runby{0%{transform:translateX(0)}45%{transform:translateX(14%)}60%{transform:translateX(14%)}100%{transform:translateX(0)}}
 @keyframes popout{0%{transform:scale(1);opacity:1}100%{transform:scale(.3);opacity:0}}
 @keyframes stampin{0%{transform:rotate(-12deg) scale(2);opacity:0}100%{transform:rotate(-12deg) scale(1);opacity:1}}
+@keyframes dropin{0%{transform:translateY(70%) scale(.6);opacity:0}65%{transform:translateY(-8%) scale(1.04);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes popin{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes riseup{0%{transform:translateY(25%);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes swingin{0%{transform:translateY(-40%) rotate(-7deg);opacity:0}45%{transform:translateY(0) rotate(4deg);opacity:1}70%{transform:rotate(-2deg)}88%{transform:rotate(.8deg)}100%{transform:rotate(0)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6%)}}
+@keyframes sway{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(29,68,120,.4)}50%{box-shadow:0 0 0 .14em rgba(29,68,120,.18)}}
+@keyframes hopword{0%,100%{transform:translateY(0)}40%{transform:translateY(-22%) scale(1.06)}}
+@keyframes checkin{0%{transform:scale(0) rotate(-120deg)}70%{transform:scale(1.15) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes walkacross{from{left:-10%}to{left:104%}}
+@keyframes step{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-12%) rotate(4deg)}}
+@keyframes ring{0%{box-shadow:0 .16em 0 #2b1a0c, 0 0 0 0 rgba(47,158,68,.6)}100%{box-shadow:0 .16em 0 #2b1a0c, 0 0 0 .5em rgba(47,158,68,0)}}
 
 @media (prefers-reduced-motion: reduce){
   *,*:before,*:after{animation-duration:1ms !important;animation-delay:0s !important;animation-iteration-count:1 !important;transition:none !important;}
@@ -540,6 +618,8 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     next:  '<svg class="ic solid" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
     cross: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
     home:  '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><polyline points="9 21.5 9 13 15 13 15 21.5"/></svg>',
+    sound: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.8 5.2a9.5 9.5 0 0 1 0 13.6"/></svg>',
+    mute:  '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>',
     full:  '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M21 8V3h-5M16 21h5v-5M3 16v5h5"/></svg>'
   };
 
@@ -562,6 +642,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     if (!el) return;
     var size = maxU, guard = 0, oldT = el.style.transition;
     el.style.transition = 'none';   // วัดขนาดทันที ไม่รอ transition
+    addCls(el, 'fitting');           // หยุดภาพเคลื่อนไหวชั่วคราว ไม่ให้ระยะเลื่อนถูกนับเป็นส่วนล้น
     el.style.fontSize = 'calc(var(--u) * ' + size + ')';
     while (guard++ < 80 && size > minU &&
            (((axis === 'w' || axis === 'hw') && el.scrollWidth > el.clientWidth + 1) ||
@@ -570,6 +651,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
       el.style.fontSize = 'calc(var(--u) * ' + size.toFixed(2) + ')';
     }
     el.style.transition = oldT;
+    rmCls(el, 'fitting');
   }
 
   /* =====================================================================
@@ -611,6 +693,90 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     if (!w) { w = stats.wrong[word] = { l1: 0, l2: 0 }; }
     w[lvl] = (w[lvl] || 0) + n;
   }
+
+  /* =====================================================================
+     ส่วนที่ 3.5 : เสียงประกอบ — สังเคราะห์ด้วย Web Audio (ไม่มีไฟล์เสียง ไม่มีเสียงพูด)
+     ครูเปิด/ปิดเสียงได้ที่ปุ่มมุมบนขวา · ถ้าเครื่องไม่รองรับ เกมยังเล่นได้ตามปกติ
+     ===================================================================== */
+  var Sound = (function () {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    var ctx = null, out = null, noiseBuf = null, on = true, gestured = false;
+    try { if (window.localStorage.getItem(STORE_KEY + '.sound') === '0') on = false; } catch (e) {}
+    function init() {
+      if (!AC) return null;
+      if (!ctx) {
+        try { ctx = new AC(); out = ctx.createGain(); out.gain.value = 0.6; out.connect(ctx.destination); }
+        catch (e) { ctx = null; AC = null; return null; }
+      }
+      if (ctx.state === 'suspended' && ctx.resume) {
+        try { var p = ctx.resume(); if (p && typeof p.then === 'function') p.then(null, function () {}); } catch (e) {}
+      }
+      return ctx;
+    }
+    function env(g, t, a, peak, d) {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+    }
+    function tone(t, f1, f2, dur, type, vol) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(f1, t);
+      if (f2 && f2 !== f1) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      env(g, t, 0.012, vol, dur);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + dur + 0.1);
+    }
+    function hiss(t, dur, vol, f1, f2) {
+      if (!noiseBuf) {
+        var len = Math.floor(ctx.sampleRate * 0.6), d, i;
+        noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+        d = noiseBuf.getChannelData(0);
+        for (i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      }
+      var src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noiseBuf; f.type = 'bandpass'; f.Q.value = 1.4;
+      f.frequency.setValueAtTime(f1, t); f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      env(g, t, dur * 0.35, vol, dur * 0.65);
+      src.connect(f); f.connect(g); g.connect(out);
+      src.start(t); src.stop(t + dur + 0.1);
+    }
+    function seq(t, notes, step, dur, type, vol) { for (var i = 0; i < notes.length; i++) tone(t + i * step, notes[i], notes[i], dur, type, vol); }
+    var G4 = 392, C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5, E6 = 1318.5, G6 = 1568, C7 = 2093;
+    var LIB = {
+      tap:     function (t) { tone(t, 600, 900, 0.07, 'sine', 0.22); },
+      pick:    function (t) { tone(t, 440, 720, 0.09, 'triangle', 0.22); },
+      drop:    function (t) { tone(t, 480, 300, 0.11, 'triangle', 0.18); },
+      correct: function (t) { seq(t, [C5, E5, G5], 0.08, 0.12, 'triangle', 0.26); tone(t + 0.24, C6, C6, 0.35, 'triangle', 0.28); tone(t + 0.27, E6, E6, 0.28, 'sine', 0.07); },
+      wrong:   function (t) { tone(t, 330, 300, 0.15, 'triangle', 0.24); tone(t + 0.17, 262, 220, 0.24, 'triangle', 0.24); },
+      hint:    function (t) { seq(t, [E6, G6, C7], 0.07, 0.1, 'sine', 0.12); },
+      star:    function (t) { tone(t, G6, C7, 0.14, 'sine', 0.1); },
+      next:    function (t) { hiss(t, 0.22, 0.12, 900, 3200); tone(t + 0.05, 700, 1050, 0.08, 'sine', 0.14); },
+      start:   function (t) { seq(t, [C5, E5, G5, C6], 0.085, 0.15, 'triangle', 0.22); },
+      fanfare: function (t) {
+        seq(t, [G4, C5, E5, G5], 0.1, 0.12, 'square', 0.07);
+        tone(t + 0.42, C5, C5, 0.55, 'triangle', 0.18); tone(t + 0.42, E5, E5, 0.55, 'triangle', 0.16);
+        tone(t + 0.42, G5, G5, 0.55, 'triangle', 0.16); tone(t + 0.42, C6, C6, 0.55, 'sine', 0.08);
+      },
+      tada:    function (t) { LIB.fanfare(t); seq(t + 0.9, [C6, E6, G6, C7], 0.06, 0.12, 'sine', 0.08); },
+      whoosh:  function (t) { hiss(t, 0.4, 0.14, 350, 2600); },
+      coin:    function (t) { tone(t, 988, 988, 0.08, 'square', 0.08); tone(t + 0.08, 1319, 1319, 0.32, 'square', 0.08); },
+      stamp:   function (t) { tone(t, 170, 55, 0.18, 'sine', 0.5); hiss(t, 0.09, 0.22, 400, 160); }
+    };
+    return {
+      unlock: function () { gestured = true; if (on) init(); },
+      play: function (name) {
+        if (!on || !LIB[name] || (!ctx && !gestured) || !init()) return;
+        try { LIB[name](ctx.currentTime + 0.02); } catch (e) {}
+      },
+      isOn: function () { return on; },
+      setOn: function (v) {
+        on = !!v;
+        try { window.localStorage.setItem(STORE_KEY + '.sound', on ? '1' : '0'); } catch (e) {}
+        if (on && gestured) init();
+      }
+    };
+  })();
 
   /* =====================================================================
      ส่วนที่ 4 : ระบบสัมผัส (แตะ + ลาก) — Pointer Events, สำรองด้วย touch/mouse
@@ -699,9 +865,13 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   }
 
   /* ปุ่มกด: ทำงานเมื่อยกนิ้วขึ้นบนปุ่ม (ขยับนิ้วเล็กน้อยได้) */
-  function onTap(el, fn) {
+  function onTap(el, fn, snd) {   // snd: ชื่อเสียง (ไม่ใส่ = 'tap', false = ไม่มีเสียง)
     if (!el) return;
-    function fire() { if (Date.now() < tapLockUntil || hasCls(el, 'off')) return; fn(el); }
+    function fire() {
+      if (Date.now() < tapLockUntil || hasCls(el, 'off')) return;
+      if (snd !== false) Sound.play(snd || 'tap');
+      fn(el);
+    }
     bindPress(el, {
       down: function () { if (!hasCls(el, 'off')) addCls(el, 'pressed'); },
       move: function (g) { setCls(el, 'pressed', !hasCls(el, 'off') && isInside(el, g.x, g.y, 16)); },
@@ -734,6 +904,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
           clone = makeClone(el, start);
           addCls(clone, 'dragging');
           addCls(el, 'ghost');
+          Sound.play('pick');
         }
         setXY(clone, g.x - g.sx, g.y - g.sy, true);
         setHover(pickTarget(o.targets(), clone, g.x, g.y));
@@ -746,7 +917,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         var c = clone; clone = null;
         rmCls(c, 'dragging');
         var t = busy ? null : pickTarget(o.targets(), c, g.x, g.y);
-        if (t) o.drop(el, c, t); else flyHome(el, c);
+        if (t) o.drop(el, c, t); else { Sound.play('drop'); flyHome(el, c); }
       },
       cancel: function () {
         rmCls(el, 'pressed');
@@ -812,13 +983,85 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   }
 
   /* =====================================================================
+     ส่วนที่ 4.5 : เอฟเฟกต์ภาพ — ดาวกระจาย กระดาษสีโปรย ดาวบิน
+     (ไม่แสดงเมื่อเครื่องตั้งค่า "ลดการเคลื่อนไหว")
+     ===================================================================== */
+  var FX_COLORS = ['#ef661c', '#ffc21a', '#2f9e44', '#3b82d6', '#e8456b', '#9b59d0'];
+  function starSVG(fill) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 1.8 15 8.6 22.4 9.2 16.8 14.1 18.5 21.4 12 17.5 5.5 21.4 7.2 14.1 1.6 9.2 9 8.6" fill="' +
+      fill + '" stroke="rgba(43,26,12,.35)" stroke-width="1" stroke-linejoin="round"/></svg>';
+  }
+  function posIn(el) {
+    var r = el.getBoundingClientRect(), a = app.getBoundingClientRect();
+    return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height / 2 };
+  }
+  function burst(el, n, spread) {
+    var layer = $('fx');
+    if (REDUCED || !el || !layer) return;
+    var c = posIn(el), u = U(), parts = [], i;
+    for (i = 0; i < n; i++) {
+      var pt = document.createElement('span'), col = FX_COLORS[i % FX_COLORS.length], kind = i % 3;
+      pt.className = 'pt' + (kind === 0 ? ' st' : kind === 1 ? ' sq' : '');
+      if (kind === 0) pt.innerHTML = starSVG(col); else pt.style.background = col;
+      pt.style.left = c.x + 'px'; pt.style.top = c.y + 'px';
+      layer.appendChild(pt);
+      var ang = i / n * Math.PI * 2 + Math.random() * 0.6, dist = spread * u * (0.55 + Math.random() * 0.6);
+      parts.push([pt, Math.cos(ang) * dist, Math.sin(ang) * dist - 3 * u, Math.floor(Math.random() * 540 - 270)]);
+    }
+    void layer.offsetWidth;
+    for (i = 0; i < parts.length; i++) {
+      setTransform(parts[i][0], 'translate(' + parts[i][1] + 'px,' + parts[i][2] + 'px) rotate(' + parts[i][3] + 'deg) scale(.5)');
+      parts[i][0].style.opacity = '0';
+    }
+    setTimeout(function () { for (var k = 0; k < parts.length; k++) removeEl(parts[k][0]); }, 1400);
+  }
+  function confetti(n) {
+    var layer = $('fx');
+    if (REDUCED || !layer) return;
+    var u = U(), W = app.clientWidth, H = app.clientHeight, parts = [], i;
+    for (i = 0; i < n; i++) {
+      var pc = document.createElement('span'), dur = 1.7 + Math.random() * 1.3, delay = Math.random() * 0.9;
+      pc.className = 'cf';
+      pc.style.background = FX_COLORS[i % FX_COLORS.length];
+      pc.style.left = Math.floor(Math.random() * W) + 'px';
+      setTransform(pc, 'translate(0,' + (-5 * u) + 'px) rotate(0deg)');
+      var tr = 'transform ' + dur.toFixed(2) + 's cubic-bezier(.35,.15,.65,1) ' + delay.toFixed(2) + 's, opacity .4s linear ' + (delay + dur - 0.4).toFixed(2) + 's';
+      pc.style.webkitTransition = tr.replace('transform', '-webkit-transform');
+      pc.style.transition = tr;
+      layer.appendChild(pc);
+      parts.push([pc, (Math.random() * 20 - 10) * u, H + 5 * u, Math.floor(Math.random() * 1000 - 500)]);
+    }
+    void layer.offsetWidth;
+    for (i = 0; i < parts.length; i++) {
+      setTransform(parts[i][0], 'translate(' + parts[i][1] + 'px,' + parts[i][2] + 'px) rotate(' + parts[i][3] + 'deg)');
+      parts[i][0].style.opacity = '0';
+    }
+    setTimeout(function () { for (var k = 0; k < parts.length; k++) removeEl(parts[k][0]); }, 3600);
+  }
+  function flyStar(fromEl, toEl, done) {
+    var layer = $('fx');
+    if (REDUCED || !fromEl || !toEl || !layer) { if (done) done(); return; }
+    var a = posIn(fromEl), b = posIn(toEl), st = document.createElement('div');
+    st.className = 'star-fly'; st.innerHTML = starSVG('#ffc21a');
+    st.style.left = a.x + 'px'; st.style.top = a.y + 'px';
+    setTransform(st, 'scale(1.3)');
+    layer.appendChild(st);
+    void st.offsetWidth;
+    setTransform(st, 'translate(' + (b.x - a.x) + 'px,' + (b.y - a.y) + 'px) rotate(220deg) scale(.6)');
+    later(function () { removeEl(st); if (done) done(); }, 720);
+  }
+  function delayStyle(sec) { return ' style="animation-delay:' + sec.toFixed(2) + 's"'; }
+
+  /* =====================================================================
      ส่วนที่ 5 : โครงหน้าจอ
      ===================================================================== */
   function buildShell() {
     app.innerHTML =
       '<div class="awning">' + awningSVG() + '</div>' +
       '<div class="screen" id="screen"></div>' +
+      '<div id="fx" aria-hidden="true"></div>' +
       '<div id="teacher">' +
+        '<button class="tbtn" id="tSound" aria-label="เปิดหรือปิดเสียง"></button>' +
         '<button class="tbtn" id="tHome" aria-label="กลับหน้าแรก">' + IC.home + ' หน้าแรก</button>' +
         '<button class="tbtn" id="tFull" aria-label="เต็มจอ">' + IC.full + ' <span id="tFullTxt">เต็มจอ</span></button>' +
       '</div>';
@@ -830,16 +1073,26 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     var onFs = function () { var t = $('tFullTxt'); if (t) t.innerHTML = fsElement() ? 'ออกจากเต็มจอ' : 'เต็มจอ'; };
     document.addEventListener('fullscreenchange', onFs, false);
     document.addEventListener('webkitfullscreenchange', onFs, false);
+    /* ปุ่มเสียง + ปลดล็อกเสียงเมื่อแตะครั้งแรก (เบราว์เซอร์ไม่ให้เล่นเสียงก่อนผู้ใช้แตะ) */
+    var sb = $('tSound');
+    var soundLabel = function () { sb.innerHTML = Sound.isOn() ? IC.sound + ' เสียง: เปิด' : IC.mute + ' เสียง: ปิด'; };
+    soundLabel();
+    onTap(sb, function () { Sound.setOn(!Sound.isOn()); soundLabel(); Sound.play('tap'); }, false);
+    var unlock = function () { Sound.unlock(); };
+    document.addEventListener(HAS_POINTER ? 'pointerdown' : 'touchstart', unlock, true);
+    document.addEventListener('mousedown', unlock, true);
+    document.addEventListener('keydown', unlock, true);
   }
   function setScreen(html, name, status) {
     clearTimers();
     cancelGesture();
     removeClones();
+    var fx = $('fx'); if (fx) fx.innerHTML = '';
     busy = false;
     currentFit = null;
     screenEl.innerHTML = (status ? '<div class="status">' + status + '</div>' : '') + html;
     restartAnim(screenEl, 'enter');
-    homeBtn.style.display = name === 'home' ? 'none' : '';
+    homeBtn.style.display = (name === 'home' || name === 'cover') ? 'none' : '';
     lockTaps(350);
   }
   function feedback(type, html) {
@@ -875,6 +1128,43 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   }
 
   /* =====================================================================
+     ส่วนที่ 5.5 : หน้าปก (แสดงตอนเปิดเกม)
+     ===================================================================== */
+  var COVER_STALLS = [
+    { cls: 's-a', goods: ['🥬', '🎋', '🍌'], label: 'ผักสด' },
+    { cls: 's-b', goods: ['🍰', '🍮', '🍡'], label: 'ขนมหวาน' },
+    { cls: 's-c', goods: ['📚', '📖'],       label: 'หนังสือ' }
+  ];
+  function showCover() {
+    var colors = ['#ef661c', '#ffc21a', '#2f9e44', '#2b62a8', '#e8456b'], flags = '', stalls = '', i, j;
+    for (i = 0; i < 26; i++) flags += '<span class="flag" style="border-top-color:' + colors[i % colors.length] + '"></span>';
+    for (i = 0; i < COVER_STALLS.length; i++) {
+      var st = COVER_STALLS[i], goods = '';
+      for (j = 0; j < st.goods.length; j++) goods += '<span style="animation-delay:-' + ((i * 3 + j) * 0.37).toFixed(2) + 's">' + st.goods[j] + '</span>';
+      stalls += '<div class="stall ' + st.cls + ' in-drop"' + delayStyle(0.45 + i * 0.12) + '>' +
+        '<span class="stall-awn"></span><span class="stall-pole l"></span><span class="stall-pole r"></span>' +
+        '<div class="stall-goods">' + goods + '</div>' +
+        '<div class="stall-counter"><span class="stall-label">' + esc(st.label) + '</span></div></div>';
+    }
+    var html =
+      '<div class="bunting">' + flags + '</div>' +
+      '<div class="cover-sign in-swing"><div class="frame-wrap">' +
+        '<span class="rope" style="left:22%"></span><span class="rope" style="right:22%"></span>' +
+        '<div class="wood-frame cover-frame"><div class="sign-face">' +
+          '<div class="cover-title">วัน<span class="hi">ห</span>นึ่งที่<span class="hi">ต</span>ลาด</div>' +
+          '<div class="cover-sub">เกมฝึกอ่านคำที่มีอักษรนำ</div>' +
+        '</div></div>' +
+        '<div class="cover-badge">ภาษาไทย ป.1–3</div>' +
+      '</div></div>' +
+      '<div class="stalls">' + stalls + '</div>' +
+      '<div class="walker"><span>👧</span><span class="wb">🧺</span></div>' +
+      '<div class="cover-foot"><button class="btn btn-start btn-go breathe in-pop"' + delayStyle(0.8) + ' id="btnCover">เริ่มเล่น ' + IC.next + '</button></div>' +
+      '<div class="cover-note">ครู: แตะ “เต็มจอ” ที่มุมขวาบน<br>ก่อนเริ่มเล่น</div>';
+    setScreen(html, 'cover', '');
+    onTap($('btnCover'), showHome, 'start');
+  }
+
+  /* =====================================================================
      ส่วนที่ 6 : หน้าแรก — แผนที่ตลาด
      ===================================================================== */
   function showHome() {
@@ -890,7 +1180,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     var shops = '';
     for (i = 0; i < SHOPS.length; i++) {
       s = SHOPS[i];
-      shops += '<button class="shop ' + (s.theme || '') + '" id="shop-' + s.id + '" aria-label="' + esc(s.name) + '">' +
+      shops += '<button class="shop ' + (s.theme || '') + ' in-drop"' + delayStyle(0.2 + i * 0.12) + ' id="shop-' + s.id + '" aria-label="' + esc(s.name) + '">' +
         '<span class="shop-awn"></span>' +
         '<span class="shop-emo" id="se-' + s.id + '">' + s.icon + '</span>' +
         '<span class="shop-name">' + esc(s.name) + '</span>' +
@@ -900,12 +1190,12 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         '</button>';
     }
     var html =
-      '<div class="title-board"><span class="rope" style="left:18%"></span><span class="rope" style="right:18%"></span>' +
+      '<div class="title-board in-swing"><span class="rope" style="left:18%"></span><span class="rope" style="right:18%"></span>' +
         '<div class="wood-frame"><div class="sign-face">' +
           '<div class="title-main">วันหนึ่งที่ตลาด</div>' +
           '<div class="title-sub">ฝึกอ่านคำที่มีอักษรนำ</div>' +
         '</div></div></div>' +
-      '<div class="basket-wrap" id="basket">' +
+      '<div class="basket-wrap in-pop"' + delayStyle(0.15) + ' id="basket">' +
         '<div class="basket-handle"></div>' +
         '<div class="basket-items">' + items + '</div>' +
         '<div class="basket"></div>' +
@@ -934,15 +1224,20 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
       fly._x = 0; fly._y = 0;
       app.appendChild(fly);
       var dd = deltaTo(fly, to);
+      Sound.play('whoosh');
       flyTo(fly, dd.x, dd.y, D(900), function () {
         removeEl(fly);
         rmCls(to, 'wait'); addCls(to, 'land');
-        var st = $('st-' + shop.id);
-        if (st) { rmCls(st, 'wait'); addCls(st, 'inked'); }
+        Sound.play('coin');
+        burst(to, 16, 12);
         var lb = $('bLabel');
         if (lb) { lb.className = 'got'; lb.innerHTML = IC.check + ' ได้ ' + shop.reward.icon + ' ' + esc(shop.reward.name) + ' แล้ว!'; }
+        later(function () {
+          var st = $('st-' + shop.id);
+          if (st) { rmCls(st, 'wait'); addCls(st, 'inked'); Sound.play('stamp'); }
+        }, 420);
       });
-    }, D(450));
+    }, D(950));
   }
   function openShop(shop) {
     if (shop.demo) showDemo(shop); else shop.start();
@@ -972,13 +1267,13 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
       }
     }
     var html =
-      '<div class="demo-text"><div class="demo-story">' + esc(d.story) + '</div><div class="demo-how">' + esc(d.how) + '</div></div>' +
-      '<div class="demo-sample center">' + sample + '</div>' +
+      '<div class="demo-text in-rise"><div class="demo-story">' + esc(d.story) + '</div><div class="demo-how">' + esc(d.how) + '</div></div>' +
+      '<div class="demo-sample center in-pop"' + delayStyle(0.15) + '>' + sample + '</div>' +
       '<div class="demo-row">' + row + '</div>' +
       '<div class="zD zone" style="top:calc(var(--u)*80)"><div class="nextwrap show" style="top:0"><button class="btn btn-start btn-go" id="btnStart">เริ่มเลย ' + IC.next + '</button></div></div>' +
       '<div class="hand" id="hand"><span class="hand-in">✋</span></div>';
     setScreen(html, 'demo', shop.icon + ' ' + esc(shop.name) + '<span class="sep">·</span>ดูวิธีเล่น');
-    onTap($('btnStart'), function () { shop.start(); });
+    onTap($('btnStart'), function () { shop.start(); }, 'start');
 
     var slot = $('dSlot'), mover = $('dMover'), hand = $('hand');
     function fill(on) {
@@ -1067,27 +1362,27 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     }
     var tiles = '';
     for (i = 0; i < q.tiles.length; i++) {
-      tiles += '<button class="tile" data-l="' + esc(q.tiles[i]) + '" aria-label="ตัวอักษร ' + esc(q.tiles[i]) + '">' +
+      tiles += '<button class="tile in-drop"' + delayStyle(0.4 + i * 0.1) + ' data-l="' + esc(q.tiles[i]) + '" aria-label="ตัวอักษร ' + esc(q.tiles[i]) + '">' +
         esc(q.tiles[i]) + '<span class="xb">' + IC.cross + '</span></button>';
     }
     var html =
       '<div class="zone zA">' +
-        '<div class="keeper"><span class="keeper-face">👵</span><span class="bubble">ป้ายหลุดไป 1 ตัว<br>ช่วยเติมหน่อยนะ</span></div>' +
-        '<div class="center" style="height:100%"><div class="woven"><div class="pic' + (q.w.caption ? ' cap' : '') + '">' +
+        '<div class="keeper in-pop"' + delayStyle(0.2) + '><span class="keeper-face">👵</span><span class="bubble">ป้ายหลุดไป 1 ตัว<br>ช่วยเติมหน่อยนะ</span></div>' +
+        '<div class="center" style="height:100%"><div class="woven in-pop"><div class="pic' + (q.w.caption ? ' cap' : '') + '">' +
           '<span class="pic-emo">' + (q.w.pic || '❓') + '</span>' +
           (q.w.caption ? '<span class="pic-cap">' + esc(q.w.caption) + '</span>' : '') +
         '</div></div></div>' +
         '<div class="progress">' + prog + '<div class="progress-txt">ป้ายที่ ' + (L1.i + 1) + ' จาก ' + n + '</div></div>' +
       '</div>' +
       '<div class="zone zB center">' +
-        '<div class="sign-wrap"><div class="wood-frame" id="sign"><div class="sign-face l1">' +
+        '<div class="sign-wrap in-swing"' + delayStyle(0.1) + '><div class="wood-frame" id="sign"><div class="sign-face l1">' +
           '<div class="sign-word" id="signWord">' + esc(q.before) + '<span class="slot" id="slot"><span class="ch">ก</span></span>' + esc(q.after) + '</div>' +
           '<div class="sign-read" id="signRead">อ่านว่า <b>' + esc(q.w.read || '') + '</b></div>' +
         '</div></div><div class="big-check" id="bigCheck">' + IC.check + '</div></div>' +
       '</div>' +
       '<div class="zone zC center"><div class="fb" id="fb" role="status" aria-live="polite"></div></div>' +
       '<div class="zone zD">' +
-        '<button class="btn btn-hint" id="btnHint">💡 คำใบ้<span class="cnt" id="hintCnt">2</span></button>' +
+        '<button class="btn btn-hint in-drop"' + delayStyle(0.3) + ' id="btnHint">💡 คำใบ้<span class="cnt" id="hintCnt">2</span></button>' +
         '<div class="tiles" id="tiles">' + tiles + '</div>' +
         '<div class="nextwrap" id="nextWrap"><button class="btn btn-next btn-go" id="btnNext">ไปต่อ ' + IC.next + '</button></div>' +
       '</div>';
@@ -1102,8 +1397,8 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         targets: function () { return L1.solved ? [] : [{ el: $('slot'), zone: $('sign'), margin: 6 }]; }
       });
     }
-    onTap($('btnHint'), l1Hint);
-    onTap($('btnNext'), l1Next);
+    onTap($('btnHint'), l1Hint, false);
+    onTap($('btnNext'), l1Next, 'next');
     currentFit = function () { fitText($('signWord'), 12.5, 7, 'w'); };
     currentFit();
   }
@@ -1123,6 +1418,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         addWrong(q.w.word, 'l1', 1);
         saveStats();
         feedback('re', 'ดูภาพ แล้วลองอีกครั้ง');
+        Sound.play('wrong');
         restartAnim(slot, 'shake');
         flyTo(clone, 0, 0, D(300), function () {
           removeEl(clone); rmCls(tile, 'ghost');
@@ -1144,7 +1440,10 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     addCls($('signRead'), 'show');
     addCls($('bigCheck'), 'show');
     feedback('ok', '<b>' + esc(q.w.word) + '</b> — เติม <b class="hi">' + esc(q.ans) + '</b> สำเร็จ');
-    var pb = $('pb' + L1.i); if (pb) { pb.className = 'pb done'; pb.innerHTML = IC.check; }
+    Sound.play('correct');
+    burst(slot, 18, 15);
+    var pb = $('pb' + L1.i);
+    flyStar(slot, pb, function () { if (pb) { pb.className = 'pb done pop'; pb.innerHTML = IC.check; Sound.play('star'); } });
     $('btnHint').style.display = 'none';
     $('tiles').style.display = 'none';
     later(function () { lockTaps(300); addCls($('nextWrap'), 'show'); }, D(450));
@@ -1169,12 +1468,14 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     if (L1.hint === 0) {
       L1.hint = 1;
       restartAnim($('slot'), 'hinted');
+      Sound.play('hint');
       feedback('tip', esc(q.w.tip || GROUP_TIPS[q.w.group] || 'ดูภาพ แล้วอ่านคำให้ดีนะ'));
     } else if (L1.hint === 1) {
       var wrong = l1WrongTiles();
       if (!wrong.length) return;
       L1.hint = 2;
       removeChoice(wrong[Math.floor(Math.random() * wrong.length)]);
+      Sound.play('hint');
       feedback('tip', 'เอาตัวที่ไม่ใช่ออกไปแล้ว 1 ตัว');
     }
     L1.rec.hint = Math.max(L1.rec.hint, L1.hint);
@@ -1196,19 +1497,20 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     var shop = shopById('signs'), minis = '', i;
     for (i = 0; i < L1.qs.length; i++) {
       var q = L1.qs[i];
-      minis += '<div class="mini"><div class="mini-emo">' + (q.w.pic || '') + '</div>' +
+      minis += '<div class="mini in-drop"' + delayStyle(0.35 + i * 0.12) + '><div class="mini-emo">' + (q.w.pic || '') + '</div>' +
         '<div class="mini-word">' + esc(q.before) + '<span class="hl">' + esc(q.ans) + '</span>' + esc(q.after) + '</div>' +
         '<div class="mini-read">อ่านว่า ' + esc(q.w.read || '') + '</div></div>';
     }
     var html =
       '<div class="zone zA center" style="flex-direction:column">' +
-        '<div class="done-title">' + IC.check + ' ซ่อมป้ายครบแล้ว! เก่งมาก</div>' +
-        '<div class="done-sub">👵 ' + (first ? 'ขอบใจนะ ป้าให้ ' + shop.reward.icon + ' ' + esc(shop.reward.name) + ' ใส่ตะกร้า' : 'ขอบใจนะ ซ่อมได้ครบอีกรอบแล้ว') + '</div>' +
+        '<div class="done-title in-pop">' + IC.check + ' ซ่อมป้ายครบแล้ว! เก่งมาก</div>' +
+        '<div class="done-sub in-rise"' + delayStyle(0.2) + '>👵 ' + (first ? 'ขอบใจนะ ป้าให้ ' + shop.reward.icon + ' ' + esc(shop.reward.name) + ' ใส่ตะกร้า' : 'ขอบใจนะ ซ่อมได้ครบอีกรอบแล้ว') + '</div>' +
       '</div>' +
       '<div class="recap" id="recap">' + minis + '</div>' +
       '<div class="zone zD"><div class="nextwrap show"><button class="btn btn-next btn-go" id="btnMap">กลับแผนที่ ' + IC.next + '</button></div></div>';
     setScreen(html, 'l1done', '🪧 ร้านซ่อมป้าย<span class="sep">·</span>ทำครบแล้ว');
     onTap($('btnMap'), showHome);
+    later(function () { Sound.play('tada'); confetti(44); }, 300);
     currentFit = function () { fitText($('recap'), 6.6, 3.6, 'w'); };
     currentFit();
   }
@@ -1271,18 +1573,18 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     bankItems = shuffle(bankItems);
     var cards = '';
     for (i = 0; i < bankItems.length; i++) {
-      cards += '<button class="card" data-w="' + esc(bankItems[i].w) + '"' + (bankItems[i].x ? ' data-x="1"' : '') + '>' + esc(bankItems[i].w) + '</button>';
+      cards += '<button class="card in-drop"' + delayStyle(0.35 + i * 0.08) + ' data-w="' + esc(bankItems[i].w) + '"' + (bankItems[i].x ? ' data-x="1"' : '') + '>' + esc(bankItems[i].w) + '</button>';
     }
     var sc = '', scene = page.scene || [];
     for (i = 0; i < scene.length; i++) sc += '<span class="sc">' + scene[i] + '</span>';
 
     var html =
-      '<div class="zone zA center"><div class="woven"><div class="scene bg-' + (page.bg || 'market') + '" id="scene"><div class="scene-in">' + sc + '</div></div></div>' +
+      '<div class="zone zA center"><div class="woven in-pop"><div class="scene bg-' + (page.bg || 'market') + '" id="scene"><div class="scene-in">' + sc + '</div></div></div>' +
         '<div class="pageno">หน้า ' + (L2.p + 1) + ' / ' + STORY.length + '</div></div>' +
-      '<div class="zone zB"><div class="sbox"><div class="sentence" id="sentence">' + sent + '</div></div></div>' +
+      '<div class="zone zB"><div class="sbox in-rise"' + delayStyle(0.1) + '><div class="sentence" id="sentence">' + sent + '</div></div></div>' +
       '<div class="zone zC center"><div class="fb" id="fb" role="status" aria-live="polite"></div></div>' +
       '<div class="zone zD">' +
-        '<button class="btn btn-hint" id="btnHint">💡 คำใบ้<span class="cnt" id="hintCnt">2</span></button>' +
+        '<button class="btn btn-hint in-drop"' + delayStyle(0.3) + ' id="btnHint">💡 คำใบ้<span class="cnt" id="hintCnt">2</span></button>' +
         '<div class="bank" id="bank">' + cards + '</div>' +
         '<div class="nextwrap" id="nextWrap"><button class="btn btn-next btn-go" id="btnNext">ไปต่อ ' + IC.next + '</button></div>' +
       '</div>';
@@ -1307,8 +1609,8 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         }
       });
     }
-    onTap($('btnHint'), l2Hint);
-    onTap($('btnNext'), l2Next);
+    onTap($('btnHint'), l2Hint, false);
+    onTap($('btnNext'), l2Next, 'next');
     l2SetActive(0);
     l2UpdateHint();
     currentFit = function () { fitText($('sentence'), 6.8, 5, 'h'); fitText($('bank'), 6.4, 4.4, 'w'); };
@@ -1354,6 +1656,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         L2.rec.blanks[bi].wrong++;
         saveStats();
         feedback('re', 'อ่านประโยคอีกครั้งนะ');
+        Sound.play('wrong');
         restartAnim(b.el, 'shake');
         flyTo(clone, 0, 0, D(300), function () {
           removeEl(clone); rmCls(card, 'ghost'); restartAnim(card, 'shake');
@@ -1371,6 +1674,8 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     b.el.firstChild.innerHTML = esc(word);
     rmCls(b.el, 'active'); rmCls(b.el, 'shake'); addCls(b.el, 'filled'); restartAnim(b.el, 'justin');
     b.el.setAttribute('aria-label', word);
+    Sound.play('correct');
+    burst(b.el, 14, 12);
     var next = -1;
     for (i = 1; i <= L2.blanks.length; i++) {
       var k = (bi + i) % L2.blanks.length;
@@ -1394,6 +1699,13 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     $('bank').style.display = 'none';
     restartAnim($('scene'), L2.page.anim === 'run' ? 'run' : 'happy');
     if (currentFit) currentFit();
+    for (i = 0; i < L2.blanks.length; i++) {
+      var be = L2.blanks[i].el;
+      rmCls(be, 'justin');
+      be.style.animationDelay = (0.15 + i * 0.12).toFixed(2) + 's';
+      restartAnim(be, 'wave');
+    }
+    later(function () { Sound.play('fanfare'); burst($('scene'), 24, 26); }, 450);
     later(function () { lockTaps(300); addCls($('nextWrap'), 'show'); }, D(900));
   }
   function l2Distractor() {
@@ -1414,12 +1726,14 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     if (L2.hint === 0) {
       L2.hint = 1;
       l2ShowClue();
+      Sound.play('hint');
       feedback('tip', 'อ่านคำที่ขีดเส้นใต้ แล้วเลือกคำที่เข้ากัน');
     } else if (L2.hint === 1) {
       var x = l2Distractor();
       if (!x) return;
       L2.hint = 2;
       removeChoice(x);
+      Sound.play('hint');
       feedback('tip', 'เอาบัตรคำที่ไม่ใช่ออกไปแล้ว 1 ใบ');
     }
     L2.rec.hint = Math.max(L2.rec.hint, L2.hint);
@@ -1446,7 +1760,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
         if (tk.t === 'blank') s += '<span class="hl">' + esc(placed[tk.bi] || parsed.blanks[tk.bi].answer) + '</span>';
         else s += esc(tk.v);
       }
-      lines += '<p class="sline">' + s + '</p>';
+      lines += '<p class="sline in-rise"' + delayStyle(0.15 + p * 0.12) + '>' + s + '</p>';
     }
     var html =
       '<div class="book"><div class="story" id="story">' + lines + '</div></div>' +
@@ -1455,6 +1769,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     setScreen(html, 'story', '📖 นิทานของเรา: วันหนึ่งที่ตลาด<span class="sep">·</span>' +
       (first ? 'ได้ ' + shop.reward.icon + ' ' + esc(shop.reward.name) + ' แล้ว' : 'อ่านจบอีกรอบแล้ว'));
     onTap($('btnMap'), showHome);
+    later(function () { Sound.play('tada'); confetti(50); }, 400);
     currentFit = function () { fitText($('story'), 6.4, 3.4, 'h'); };
     currentFit();
   }
@@ -1560,7 +1875,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     resizeTimer = setTimeout(function () { if (currentFit) currentFit(); }, 150);
   }, false);
   buildShell();
-  showHome();
+  showCover();
   try {
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
       document.fonts.ready.then(function () { if (currentFit) currentFit(); });
