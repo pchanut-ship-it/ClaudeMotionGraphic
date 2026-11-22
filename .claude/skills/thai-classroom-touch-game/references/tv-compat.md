@@ -102,10 +102,11 @@ with the real font offline, download the Mali CSS and woff2 files once and
 serve them with `page.route` (the example play-through accepts `--fonts
 <dir>`).
 
-## 7. Artifact preview (claude.ai)
+## 7. Hosted preview pages (for example Claude Artifacts)
 
-To publish a preview page, strip `<!DOCTYPE>`, `<html>`, `<head>` and
-`<body>` (keep the `<title>`, font `<link>`s, `<style>` and body content).
-Drop the viewport meta, because the platform adds its own. Google Fonts and
+Hosts that wrap your HTML in their own page skeleton need the game's
+`<!DOCTYPE>`, `<html>`, `<head>` and `<body>` stripped (keep the `<title>`,
+font `<link>`s, `<style>` and body content). Drop the viewport meta, because
+the host adds its own. Google Fonts and
 inline scripts are allowed. Fullscreen may be refused inside the preview
 frame. That is fine, since the button handles the rejection.

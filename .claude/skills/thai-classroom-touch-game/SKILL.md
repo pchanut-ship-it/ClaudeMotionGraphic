@@ -106,7 +106,9 @@ because the game cannot check pronunciation.
 
 ## Verify before delivering
 
-Run the bundled checks (paths are relative to this skill's folder):
+If your environment can run code (Python 3, Node.js and Playwright), run the bundled
+checks (paths are relative to this skill's folder). If it can't, review the code against
+the non-negotiables and `references/tv-compat.md` by reading it, and say so in the report.
 
 ```bash
 python3 scripts/check_static.py <game>/index.html   # forbidden syntax, external hosts, ES5 parse
@@ -178,9 +180,9 @@ Each of these cost a debugging round. Avoid them up front:
   teacher summary).
 - Report against the non-negotiables: what passed, any number that fell short
   and why, and every decision you made that the brief did not specify.
-- If the user wants a shareable preview, an Artifact page works. Strip the
-  `<!DOCTYPE>`, `<html>`, `<head>` and `<body>` tags (keep the title, font
-  links, style and body content) because the Artifact publish adds its own
-  skeleton. Google Fonts are allowed there.
+- If the user wants a shareable preview and your platform hosts HTML pages
+  (for example Claude Artifacts), follow `references/tv-compat.md` §7. Some
+  hosts add their own page skeleton, so the game's `<!DOCTYPE>`, `<html>`,
+  `<head>` and `<body>` tags must be stripped first.
 - Answer in the user's language, which is often Thai. In-game copy is short,
   simple Thai for the grade level. Teacher-facing text may be more formal.
