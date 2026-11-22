@@ -30,8 +30,14 @@
 @media (max-aspect-ratio:16/9){ :root{ --u:0.5625vw; } }
 
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#b8741f;}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;}
+/* พื้นหลังลายตลาดอยู่ที่ body เพื่อให้เต็มจอทุกสัดส่วน (ไม่มีแถบสีขอบ) */
 body{
+  background-color:#ffc83d;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0, rgba(255,255,255,.16) calc(var(--u)*1.1), rgba(255,255,255,0) calc(var(--u)*1.1), rgba(255,255,255,0) calc(var(--u)*4.4)),
+    repeating-linear-gradient(-45deg, rgba(190,110,0,.10) 0, rgba(190,110,0,.10) calc(var(--u)*1.1), rgba(190,110,0,0) calc(var(--u)*1.1), rgba(190,110,0,0) calc(var(--u)*4.4)),
+    radial-gradient(ellipse at 50% 40%, #ffe48f 0%, #ffc83d 75%);
   font-family:'Mali','Itim','Leelawadee UI','Leelawadee','Thonburi','Noto Sans Thai','Sarabun','Loma','Tahoma',sans-serif;
   color:var(--ink);
   -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
@@ -41,19 +47,26 @@ body{
 button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:none;
   -webkit-appearance:none;-moz-appearance:none;appearance:none;line-height:inherit;text-align:center;}
 
-/* ---------- เวที 16:9 ---------- */
+/* ---------- เวที 16:9 ----------
+   พื้นที่เล่นเป็น 16:9 เสมอ ชิดขอบบน
+   จอกว้างกว่า 16:9 → กันสาดและพื้นหลังต่อยาวเต็มความกว้าง
+   จอสูงกว่า 16:9 → พื้นที่ด้านล่างที่เหลือเป็นเคาน์เตอร์ไม้ */
 #app{
-  position:absolute;left:50%;top:50%;
+  position:absolute;left:50%;top:0;
   width:calc(var(--u)*177.78);height:calc(var(--u)*100);
-  margin-left:calc(var(--u)*-88.89);margin-top:calc(var(--u)*-50);
-  overflow:hidden;background-color:#ffc83d;
-  background-image:
-    repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0, rgba(255,255,255,.16) calc(var(--u)*1.1), rgba(255,255,255,0) calc(var(--u)*1.1), rgba(255,255,255,0) calc(var(--u)*4.4)),
-    repeating-linear-gradient(-45deg, rgba(190,110,0,.10) 0, rgba(190,110,0,.10) calc(var(--u)*1.1), rgba(190,110,0,0) calc(var(--u)*1.1), rgba(190,110,0,0) calc(var(--u)*4.4)),
-    radial-gradient(ellipse at 50% 40%, #ffe48f 0%, #ffc83d 75%);
+  margin-left:calc(var(--u)*-88.89);
+  overflow:hidden;
 }
-.awning{position:absolute;left:0;top:0;width:100%;height:calc(var(--u)*9.6);z-index:5;pointer-events:none;}
-.awning svg{display:block;width:100%;height:100%;}
+.awning{position:absolute;left:0;top:0;width:100%;height:calc(var(--u)*9.6);z-index:5;pointer-events:none;
+  background-repeat:repeat-x;background-size:calc(var(--u)*14.8) 100%;background-position:calc(50vw - var(--u)*88.89) 0;}
+.floor{position:absolute;left:0;right:0;top:calc(var(--u)*100);bottom:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  border-top:calc(var(--u)*1.2) solid #6b3e19;background-color:#ad6d37;
+  background-image:repeating-linear-gradient(180deg, rgba(60,30,5,.22) 0, rgba(60,30,5,.22) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) calc(var(--u)*6)),
+    linear-gradient(180deg,#c98a4b,#9a5c2a);}
+.rotate-hint{display:none;text-align:center;color:#fff8e6;font-weight:700;font-size:4.6vw;line-height:1.45;padding:0 6vw;text-shadow:0 2px 0 rgba(60,30,5,.55);}
+.rotate-hint .ic{width:1.2em;height:1.2em;vertical-align:-0.2em;}
+@media (orientation:portrait){ .rotate-hint{display:block;} }
 .screen{position:absolute;left:0;top:0;width:100%;height:100%;}
 .screen.enter{animation:enter .25s ease-out;}
 .zone{position:absolute;left:0;width:100%;}
@@ -140,7 +153,7 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
 .card.pressed{transform:translateY(calc(var(--u)*1));box-shadow:0 calc(var(--u)*.2) 0 var(--card-dk);}
 
 /* ---------- เอฟเฟกต์ดาว / กระดาษสี ---------- */
-#fx{position:absolute;left:0;top:0;width:100%;height:100%;z-index:55;pointer-events:none;overflow:hidden;}
+#fx{position:fixed;left:0;top:0;width:100%;height:100%;z-index:55;pointer-events:none;overflow:hidden;}
 .pt{position:absolute;width:calc(var(--u)*2.4);height:calc(var(--u)*2.4);margin:calc(var(--u)*-1.2) 0 0 calc(var(--u)*-1.2);border-radius:50%;
   transition:transform .85s cubic-bezier(.12,.75,.3,1), opacity .5s ease-in .4s;}
 .pt.sq{border-radius:calc(var(--u)*.45);}
@@ -624,17 +637,13 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   };
 
   /* กันสาดลายทาง (วาดด้วย SVG ตามสัดส่วนเวที 16:9) */
-  function awningSVG() {
-    var W = 1778, sw = 74, h = 48, r = sw / 2, n = Math.ceil(W / sw), i, x, s = '', sh = '';
-    for (i = 0; i < n; i++) {
-      x = i * sw;
-      var d = 'M' + x + ' 8H' + (x + sw) + 'V' + h + 'A' + r + ' ' + r + ' 0 0 1 ' + x + ' ' + h + 'Z';
-      sh += '<path d="' + d + '" transform="translate(0 5)"/>';
-      s += '<path d="' + d + '" fill="' + (i % 2 ? '#fff4dc' : '#ef661c') + '"/>';
-    }
-    return '<svg viewBox="0 0 1778 96" preserveAspectRatio="none" aria-hidden="true">' +
-      '<g fill="rgba(70,30,0,.18)">' + sh + '</g>' + s +
-      '<rect x="0" y="0" width="1778" height="10" fill="#7a4a1f"/></svg>';
+  function awningTile() {   // ลายกันสาด 1 คู่ (ส้ม + ครีม) ทำซ้ำได้เต็มความกว้างจอ
+    var d1 = 'M0 8H74V48A37 37 0 0 1 0 48Z', d2 = 'M74 8H148V48A37 37 0 0 1 74 48Z';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 96" preserveAspectRatio="none">' +
+      '<g fill="rgba(70,30,0,.18)" transform="translate(0 5)"><path d="' + d1 + '"/><path d="' + d2 + '"/></g>' +
+      '<path d="' + d1 + '" fill="#ef661c"/><path d="' + d2 + '" fill="#fff4dc"/>' +
+      '<rect x="0" y="0" width="148" height="10" fill="#7a4a1f"/></svg>';
+    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
   }
 
   /* ย่อขนาดตัวอักษรจนพอดีกล่อง (axis 'h' = สูง, 'w' = กว้าง) */
@@ -991,9 +1000,9 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 1.8 15 8.6 22.4 9.2 16.8 14.1 18.5 21.4 12 17.5 5.5 21.4 7.2 14.1 1.6 9.2 9 8.6" fill="' +
       fill + '" stroke="rgba(43,26,12,.35)" stroke-width="1" stroke-linejoin="round"/></svg>';
   }
-  function posIn(el) {
-    var r = el.getBoundingClientRect(), a = app.getBoundingClientRect();
-    return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height / 2 };
+  function posIn(el) {   // พิกัดบนจอ (ชั้นเอฟเฟกต์ครอบทั้งจอ)
+    var r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
   function burst(el, n, spread) {
     var layer = $('fx');
@@ -1018,7 +1027,8 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
   function confetti(n) {
     var layer = $('fx');
     if (REDUCED || !layer) return;
-    var u = U(), W = app.clientWidth, H = app.clientHeight, parts = [], i;
+    var u = U(), W = window.innerWidth || document.documentElement.clientWidth,
+        H = window.innerHeight || document.documentElement.clientHeight, parts = [], i;
     for (i = 0; i < n; i++) {
       var pc = document.createElement('span'), dur = 1.7 + Math.random() * 1.3, delay = Math.random() * 0.9;
       pc.className = 'cf';
@@ -1056,10 +1066,16 @@ button{font-family:inherit;color:inherit;margin:0;padding:0;border:0;background:
      ส่วนที่ 5 : โครงหน้าจอ
      ===================================================================== */
   function buildShell() {
+    var aw = document.createElement('div'), fl = document.createElement('div'), fx = document.createElement('div');
+    aw.className = 'awning'; aw.setAttribute('aria-hidden', 'true'); aw.style.backgroundImage = awningTile();
+    fl.className = 'floor'; fl.setAttribute('aria-hidden', 'true');
+    fl.innerHTML = '<div class="rotate-hint">📱 ' + IC.retry + '<br>หมุนจอเป็นแนวนอน<br>จะเล่นได้ง่ายขึ้น</div>';
+    fx.id = 'fx'; fx.setAttribute('aria-hidden', 'true');
+    document.body.insertBefore(fl, app);
+    document.body.insertBefore(aw, app);
+    document.body.appendChild(fx);
     app.innerHTML =
-      '<div class="awning">' + awningSVG() + '</div>' +
       '<div class="screen" id="screen"></div>' +
-      '<div id="fx" aria-hidden="true"></div>' +
       '<div id="teacher">' +
         '<button class="tbtn" id="tSound" aria-label="เปิดหรือปิดเสียง"></button>' +
         '<button class="tbtn" id="tHome" aria-label="กลับหน้าแรก">' + IC.home + ' หน้าแรก</button>' +
